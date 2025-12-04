@@ -1,124 +1,163 @@
-# Buzón Anónimo
+📨 Buzón Anónimo
 
-Este proyecto consta de dos partes:  
+Aplicación web que permite la interacción anónima entre alumnos, profesores y moderadores en clases virtuales.
 
-- **Backend:** `buzon_api` (Node.js)  
-- **Frontend:** `buzon_app` (Angular)  
+El proyecto está dividido en dos partes principales:
 
-Permite a los usuarios interactuar en clases virtuales mediante mensajes anónimos.
+Frontend: buzon_app (Angular)
 
----
+Backend: buzon_api (Node.js + Express + MySQL)
 
-## Requisitos Previos
+🏗️ Arquitectura del Proyecto
 
-- [XAMPP](https://www.apachefriends.org/index.html) (para Apache y MySQL/PHPMyAdmin)  
-- Node.js (versión recomendada 18+)  
-- Angular CLI (opcional para desarrollo frontend)  
+La aplicación sigue una arquitectura cliente-servidor, separada en dos módulos independientes.
 
----
+🔹 1. Frontend – buzon_app (Angular)
 
-## Configuración de la Base de Datos
+Es una Single Page Application (SPA) donde el usuario interactúa con la plataforma.
 
-1. Abrir XAMPP y activar **Apache** y **MySQL**.
-2. Acceder a **phpMyAdmin** desde `http://localhost/phpmyadmin`.
-3. Crear una nueva base de datos llamada:
-4. Importar la estructura de la base de datos con el archivo `buzon_anonimo.sql`. Para ello:
-   - Seleccionar la base de datos `buzon_anonimo`.
-   - Ir a la pestaña **SQL**.
-   - Copiar y ejecutar el contenido de `buzon_anonimo.sql`.
+Responsabilidades:
 
-5. Insertar usuarios iniciales y roles ejecutando el siguiente SQL:
+Interfaz gráfica para alumnos, profesores y moderadores.
 
-```sql
--- Insertar usuarios
+Gestión de formularios (login, mensajes, clases).
+
+Comunicación con el backend mediante servicios Angular (HTTPClient).
+
+Enrutamiento interno con control de acceso según rol.
+
+Estructura lógica típica:
+
+components/ → Pantallas y elementos visuales
+
+services/ → Comunicación con la API
+
+models/ → Interfaces TS para tipado
+
+guards/ → Protección de rutas por rol
+
+🔹 2. Backend – buzon_api (Node.js + Express)
+
+Exposición de una API REST que gestiona la lógica del sistema.
+
+Responsabilidades:
+
+Validación de usuarios y roles.
+
+CRUD de clases.
+
+Gestión de códigos temporales.
+
+Registro y consulta de mensajes.
+
+Conexión con la base de datos MySQL.
+
+Estructura típica:
+
+server.js → Punto de entrada
+
+routes/ → Endpoints del sistema
+
+controllers/ → Lógica de negocio
+
+models/ → Consultas a MySQL
+
+middlewares/ → Autorización y permisos
+
+🔹 3. Comunicación Frontend ↔ Backend
+
+Toda la comunicación se hace mediante:
+
+HTTP REST
+
+JSON como formato de intercambio
+
+Validación de roles en cada petición
+
+Ejemplos de endpoints:
+
+POST /login
+
+POST /clases
+
+GET /clases/:id/mensajes
+
+POST /mensaje
+
+⚙️ Requisitos Previos
+
+XAMPP (MySQL + phpMyAdmin)
+
+Node.js 18+
+
+Angular CLI (opcional pero recomendado)
+
+🗄️ Configuración de la Base de Datos
+
+Iniciar Apache y MySQL en XAMPP
+
+Entrar en: http://localhost/phpmyadmin
+
+Crear la base de datos buzon_anonimo
+
+Importar buzon_anonimo.sql
+
+Insertar usuarios de ejemplo:
+
 INSERT INTO usuario (id_user, correo_cifrado, contrasena_cifrado) 
 VALUES 
-(1, 'profesor@example.com', '1234'), 
-(2, 'moderador@example.com', '1234'), 
+(1, 'profesor@example.com', '1234'),
+(2, 'moderador@example.com', '1234'),
 (3, 'alumno@example.com', '1234');
 
--- Insertar roles
 INSERT INTO profesor (id_user, nombre) VALUES (1, 'Profesor Ejemplo');
 INSERT INTO moderador (id_user, nombre) VALUES (2, 'Moderador Ejemplo');
 INSERT INTO alumno (id_user) VALUES (3);
 
-Instalación y Ejecución
-Backend (buzon_api)
-
-Abrir una terminal y acceder a la carpeta del backend:
-
+▶️ Ejecución del Proyecto
+Backend – buzon_api
 cd buzon_api
-
-
-Instalar dependencias:
-
 npx npm install
-
-
-Ejecutar el servidor backend:
-
 node server.js
 
 
-Esto levantará el backend en el puerto configurado (por defecto suele ser http://localhost:3000).
+Backend en:
+http://localhost:3000
 
-Frontend (buzon_app)
-
-Abrir otra terminal y acceder a la carpeta del frontend:
-
+Frontend – buzon_app
 cd buzon_app
-
-
-Instalar dependencias:
-
 npx npm install
-
-
-Ejecutar Angular en modo desarrollo:
-
 npx ng serve
 
 
-Angular mostrará la URL donde se está ejecutando el frontend, normalmente:
+Frontend en:
+http://localhost:4200
 
-http://localhost:4200/
+🔑 Acceso de Prueba
+Rol	Usuario	Contraseña
+Profesor	profesor@example.com
+	1234
+Moderador	moderador@example.com
+	1234
+Alumno	alumno@example.com
+	1234
+🧩 Roles del Sistema
+🛡️ Moderador
 
+Crear y eliminar clases
 
-Abrir esta URL en el navegador.
+Acceso total a todas las clases
 
-Acceso a la Aplicación
+Generar códigos temporales (1 minuto)
 
-Al ingresar, usar los usuarios que insertaste en la base de datos con phpMyAdmin:
+👨‍🏫 Profesor
 
-Profesor: profesor@example.com
- / 1234
+Puede leer todos los mensajes de la clase
 
-Moderador: moderador@example.com
- / 1234
+Puede generar códigos temporales
 
-Alumno: alumno@example.com
- / 1234
+🎓 Alumno
 
-Explicación de Roles
+Solo puede escribir mensajes anónimos
 
-Moderador:
-
-Puede crear y eliminar clases.
-
-Acceso a todas las clases.
-
-Puede generar el código temporal para que alumnos y profesores se unan a la clase.
-
-El código temporal dura 1 minuto.
-
-Profesor:
-
-Al estar en una clase, puede leer todos los mensajes de los alumnos.
-
-Puede generar el código temporal para permitir que otros se unan a la clase.
-
-Alumno:
-
-Solo puede escribir mensajes anónimos en la clase.
-
-Solo puede ver sus propios mensajes.
+Solo ve sus propios mensajes
