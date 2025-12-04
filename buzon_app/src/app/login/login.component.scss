@@ -1,0 +1,131 @@
+@use "sass:color"; 
+
+// Variables de Color
+$color-main-blue: #3f51b5;     // Azul oscuro para el título
+$color-button-blue: #5c6bc0;  // Azul más claro para el botón
+$color-background: #e9eef6;   // Fondo gris/azul claro y suave
+$color-text: #333;
+
+.login-page {
+  // Fondo
+  background-color: $color-background;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.logo-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px; 
+  text-align: center;
+  color: $color-text;
+
+  .logo-icon {
+    width: 60px;
+    height: auto;
+    margin-bottom: 5px;
+  }
+
+  .main-title {
+    // Tipografía con serifa y color azul principal
+    font-family: Georgia, 'Times New Roman', Times, serif; 
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: $color-main-blue; 
+  }
+}
+
+.login-container {
+  // Estilos de la tarjeta
+  width: 100%;
+  max-width: 320px; 
+  // Ajuste del padding interno de la tarjeta
+  padding: 30px 15px; 
+  background-color: #ffffff;
+  border-radius: 12px;
+  // Sombra más marcada
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
+  display: flex;
+  flex-direction: column;
+}
+
+.form-title {
+  // Título "Acceso Usuarios"
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: $color-text;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+// Estilos de los inputs (AJUSTADO: Más estrechos y centrados)
+.form-control {
+  // Ancho reducido y centrado con margen auto para crear margen lateral
+  width: 90%; 
+  margin: 0 auto 15px auto;
+  
+  // Padding ajustado para espaciado interno
+  padding: 10px 16px; 
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-shadow: none;
+
+  &:focus {
+    border-color: #aaa; 
+    box-shadow: none;
+    outline: none;
+  }
+}
+
+.btn-primary {
+  // El botón ocupa el mismo ancho que los inputs y está centrado
+  width: 90%;
+  margin: 10px auto 0 auto;
+  padding: 10px;
+  background-color: $color-button-blue; 
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+
+  &:hover {
+    // Corrección del warning usando color.adjust
+    background-color: color.adjust($color-button-blue, $lightness: -10%); 
+  }
+  
+  &.btn-block {
+    display: block;
+  }
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 0.85rem;
+  color: #666;
+
+  a {
+    color: $color-main-blue;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+}

@@ -1,0 +1,70 @@
+<div class="main-wrapper">
+  
+  <header class="app-header">
+    <div class="app-title">
+      <span class="logo-text">Buzón Anónimo</span>
+    </div>
+    <div class="user-actions">
+      <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
+      <div class="profile-icon">A</div>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    
+    <div class="top-section">
+      <h2 class="main-heading">Mis Clases</h2> 
+      
+      <div class="acciones-generales">
+        <button *ngIf="esModerador()" class="action-btn create-btn" (click)="abrirModalCrearClase()">
+          Crear nueva clase
+        </button>
+        <button *ngIf="!esModerador()" class="action-btn join-btn" (click)="unirseClase()">
+          Unirse a una clase
+        </button>
+      </div>
+    </div>
+    
+    <div class="clases-list-wrapper">
+      <ul *ngIf="clases.length > 0; else noClases">
+        <li *ngFor="let clase of clases; let i = index" class="clase-item" [attr.data-index]="i">
+          <div class="clase-content" (click)="entrarClase(clase)">
+            <span class="clase-nombre">
+              {{ clase.nombre }} 
+              <span *ngIf="esModerador()" class="creador">(Creada por ti)</span>
+            </span>
+         
+          </div>
+          
+          <button 
+            *ngIf="esModerador()" 
+            class="delete-btn trash-icon" 
+            (click)="eliminarClase(clase.id_clase); $event.stopPropagation()">
+            🗑️
+          </button>
+        </li>
+      </ul>
+      
+      <ng-template #noClases>
+        <div class="no-clases-message">
+          <p>No estás unido a ninguna clase.</p>
+        </div>
+      </ng-template>
+      
+    </div>
+    
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="modalCrearClase">
+    <div class="modal">
+      <h3>Crear Clase</h3>
+      <input type="text" placeholder="Nombre de la clase" [(ngModel)]="nuevoNombre">
+      <div class="modal-buttons">
+        <button (click)="crearClase()" [disabled]="!nuevoNombre.trim()">Crear</button>
+        <button (click)="cerrarModalCrearClase()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+</div>

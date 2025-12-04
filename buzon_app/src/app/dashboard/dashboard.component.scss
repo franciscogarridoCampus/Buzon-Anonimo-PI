@@ -1,0 +1,278 @@
+@use "sass:color";
+
+// Colores base...
+$color-primary-blue: #3f51b5; // Azul oscuro principal (para la cabecera)
+$color-secondary-blue: #5c6bc0; // Azul secundario para botones y hover
+$color-card-shadow: rgba(0, 0, 0, 0.1);
+$color-background: #f4f6f9; // Un gris muy claro para el fondo
+$color-text: #333;
+
+// Colores de las clases (5 colores distintos)
+$clase-colors: (
+  #3f51b5,  // Azul oscuro (Índice 0)
+  #4caf50,  // Verde (Índice 1)
+  #ff9800,  // Naranja (Índice 2)
+  #e91e63,  // Rosa (Índice 3)
+  #00bcd4   // Cyan (Índice 4)
+);
+
+.main-wrapper {
+  // Asegura que ocupe toda la pantalla
+  min-height: 100vh;
+  background-color: $color-background;
+}
+
+// --- 1. BARRA DE NAVEGACIÓN ---
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: $color-primary-blue;
+  color: white;
+  box-shadow: 0 2px 4px $color-card-shadow;
+  
+  .app-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    
+    .logo-text {
+      font-family: Georgia, 'Times New Roman', Times, serif; 
+      font-weight: normal;
+    }
+  }
+
+  .user-actions {
+    display: flex;
+    align-items: center;
+
+    .logout-btn {
+      background: none;
+      border: 1px solid white;
+      color: white;
+      padding: 5px 10px;
+      margin-right: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+      
+      &:hover {
+        background-color: color.adjust($color-primary-blue, $lightness: 10%);
+      }
+    }
+    
+    .profile-icon {
+      width: 30px;
+      height: 30px;
+      background-color: white;
+      color: $color-primary-blue;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  }
+}
+
+// --- CONTENEDOR PRINCIPAL (Dashboard) ---
+.dashboard-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px $color-card-shadow;
+
+  // Ajuste: si el título principal es ahora el de "Mis Clases"
+  h2 {
+    margin-bottom: 20px;
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
+  h3 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #555;
+  }
+}
+
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.acciones-generales {
+  .action-btn {
+    padding: 8px 15px;
+    background-color: $color-secondary-blue;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+    
+    &:hover {
+      background-color: color.adjust($color-secondary-blue, $lightness: -10%);
+    }
+  }
+}
+
+// --- 2. LISTA DE CLASES Y ESTILOS DE BARRA ---
+.clases-list-wrapper {
+  padding-top: 10px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+.clase-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: white;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  // Generación de colores dinámicos
+  @for $i from 0 through 4 {
+    &[data-index="#{$i}"] {
+      background-color: nth($clase-colors, $i + 1);
+    }
+  }
+  
+  .clase-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-right: 15px;
+
+    .clase-nombre {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+
+    .clase-codigo {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    
+    .creador {
+      font-size: 0.8em;
+      color: #e0e0e0; 
+      margin-left: 5px;
+    }
+  }
+}
+
+// --- ESTILO DEL BOTÓN PAPELERA (AJUSTADO: Fondo transparente) ---
+.delete-btn.trash-icon {
+  background: transparent; // Fondo transparente
+  border: none;
+  color: white; // Color del ícono (se verá bien sobre el fondo de clase)
+  cursor: pointer;
+  font-size: 1.3rem; 
+  line-height: 1;
+  padding: 5px; // Añadimos padding para que sea más fácil hacer clic
+  transition: opacity 0.2s, color 0.2s;
+  
+  &:hover {
+    opacity: 0.8;
+    color: #ffcc80; // Un color más claro al pasar el ratón para indicar interacción
+  }
+}
+
+// --- ELIMINACIÓN DE ESTILOS NO NECESARIOS (Menú de 3 puntos) ---
+.clase-actions-menu {
+  display: none !important; // Desactivamos completamente el contenedor de 3 puntos
+}
+
+// --- 4. MENSAJE DE NO CLASES ---
+.no-clases-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px; 
+  text-align: center;
+  
+  p {
+    font-size: 1.1rem;
+    color: #888;
+  }
+}
+
+// --- ESTILOS DE MODAL ---
+.error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.modal-backdrop {
+  // Estilos del modal se mantienen funcionales
+  position: fixed;
+  top: 0;
+  left: 0;
+  right:0;
+  bottom:0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+
+      button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        background-color: $color-secondary-blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+        
+        &:disabled {
+          background-color: #9fa8da;
+          cursor: not-allowed;
+        }
+      }
+      button:last-child {
+        background-color: #757575;
+      }
+    }
+  }
+}
