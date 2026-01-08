@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,11 @@ export class LoginComponent {
   registroError = '';
   registroLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   // LOGIN
   login() {
@@ -78,7 +82,6 @@ export class LoginComponent {
   // REGISTRAR NUEVO USUARIO
   registrar() {
     this.registroError = '';
-    this.registroLoading = false;
 
     // Validaciones
     if (!this.nuevoCorreo.trim() || !this.nuevoCorreo.endsWith('@campuscamara.es')) {
@@ -96,15 +99,21 @@ export class LoginComponent {
     this.authService.register(this.nuevoCorreo, this.nuevaContrasena, this.nuevoCorreo, this.nuevoRol)
       .subscribe({
         next: () => {
+          // Registro correcto → volvemos al login automáticamente
           this.registroLoading = false;
-          // Registro exitoso → mostrar alert
-          alert('Usuario registrado correctamente. Pulsa VOLVER AL LOGIN para continuar.');
-          // Limpiamos campos pero no cerramos el registro automáticamente
-          this.limpiarRegistro();
+          this.mostrarRegistro = false; // cerrar registro
+          this.limpiarRegistro();       // limpiar campos de registro
+          this.correo = this.nuevoCorreo; // copiar correo al login
+          this.pass = '';                // limpiar contraseña
+          this.errorMessage = '';
+
+          // Forzar actualización de la vista para habilitar botones
+          this.cdr.detectChanges();
         },
         error: () => {
           this.registroError = 'Error al registrar usuario. El correo puede estar en uso.';
           this.registroLoading = false;
+          this.cdr.detectChanges();
         }
       });
   }
