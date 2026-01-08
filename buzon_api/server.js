@@ -2,7 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const badwords = require('./badwords.js');
 const app = express();
 
 // Configuración para permitir conexiones desde cualquier sitio
@@ -149,12 +149,24 @@ app.get('/api/mensajes/:idClase', (req, res) => {
     });
 });
 
-// 7. ENVIAR MENSAJE
+// 7. ENVIAR MENSAJE (con filtro de malas palabras)
 app.post('/api/mensaje', (req, res) => {
     const { texto, id_autor, id_clase } = req.body;
+
+    // Convertimos a minúsculas para comparar sin distinción
+    const textoMinus = texto.toLowerCase();
+
+    // Verificamos si contiene alguna palabra prohibida
+    const contieneMala = badwords.some(palabra => textoMinus.includes(palabra.toLowerCase()));
+
+    if (contieneMala) {
+        return res.status(400).json({ success: false, msg: 'El mensaje contiene palabras no permitidas' });
+    }
+
     const fecha = new Date().toISOString().slice(0, 10);
     const hora = new Date().toLocaleTimeString('es-ES', { hour12: false });
     const sql = 'INSERT INTO MENSAJE (texto, fecha, hora_minuto, id_autor, id_clase) VALUES (?, ?, ?, ?, ?)';
+
     db.query(sql, [texto, fecha, hora, id_autor, id_clase], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
@@ -196,8 +208,11 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
         res.json({ success: true, codigo_temp: nuevoCodigo });
     });
 });
+//Filtro palabras
 
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
     console.log('🚀 API corriendo en puerto 3000');
 });
+
+

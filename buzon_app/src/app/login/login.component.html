@@ -1,32 +1,48 @@
 <div class="login-page">
-  <div class="logo-area">
-    <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon">
-    <h1 class="main-title">Buzón Anónimo</h1>
-  </div>
-  
-  <div class="login-container">
+
+  <!-- LOGIN -->
+  <div class="login-container" *ngIf="!mostrarRegistro">
+    <div class="logo-area">
+      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon">
+      <h1 class="main-title">Buzón Anónimo</h1>
+    </div>
+
     <h3 class="form-title">Acceso Usuarios</h3>
-    
-    <input type="email" 
-           [(ngModel)]="correo" 
-           placeholder="Correo" 
-           class="form-control">
 
-    <input type="password" 
-           [(ngModel)]="pass" 
-           placeholder="Contraseña" 
-           class="form-control">
+    <input type="email" [(ngModel)]="correo" placeholder="Correo" class="form-control">
+    <input type="password" [(ngModel)]="pass" placeholder="Contraseña" class="form-control">
 
-    <button (click)="login()" 
-            [disabled]="loading" 
-            class="btn btn-primary btn-block">
-      ENTRAR
-    </button>
+    <button (click)="login()" [disabled]="loading" class="btn btn-primary btn-block">ENTRAR</button>
 
     <div class="register-link">
-      ¿No tienes cuenta? <a href="#" routerLink="/register">Regístrate aquí</a>
+      ¿No tienes cuenta? 
+      <a href="javascript:void(0)" (click)="toggleRegistro()">Regístrate aquí</a>
     </div>
-    
+
     <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
   </div>
+
+  <!-- REGISTRO -->
+  <div class="login-container" *ngIf="mostrarRegistro">
+    <div class="logo-area">
+      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon">
+      <h1 class="main-title">Registro de Usuario</h1>
+    </div>
+
+    <input type="email" [(ngModel)]="nuevoCorreo" placeholder="Correo @campuscamara.es" class="form-control">
+    <input type="password" [(ngModel)]="nuevaContrasena" placeholder="Contraseña" class="form-control">
+
+    <label>Rol:</label>
+    <select [(ngModel)]="nuevoRol" class="form-control">
+      <option value="alumno">Alumno</option>
+      <option value="profesor">Profesor</option>
+      <option value="moderador">Moderador</option>
+    </select>
+
+    <button (click)="registrar()" [disabled]="registroLoading" class="btn btn-primary btn-block">REGISTRAR</button>
+    <button (click)="volverAlLogin()" class="btn btn-primary btn-block">VOLVER AL LOGIN</button>
+
+    <div *ngIf="registroError" class="error">{{ registroError }}</div>
+  </div>
+
 </div>

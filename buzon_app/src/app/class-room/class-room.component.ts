@@ -22,9 +22,9 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   claseNombre: string = 'Cargando...';
-  codigoClase: string | null = null; // el código generado
-  mostrarCodigo: boolean = false;    // si se muestra en pantalla
-  tiempoRestante: number = 0;        // segundos restantes del código
+  codigoClase: string | null = null; // código temporal
+  mostrarCodigo: boolean = false;    // si mostrar el código en pantalla
+  tiempoRestante: number = 0;        // segundos restantes
 
   private temporizador: any;
 
@@ -37,14 +37,18 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Obtener usuario desde localStorage
     const userStorage = localStorage.getItem('user');
     if (!userStorage) {
       this.router.navigate(['/login']);
       return;
     }
     this.user = JSON.parse(userStorage);
+
+    // Obtener idClase de la ruta
     this.idClase = Number(this.route.snapshot.paramMap.get('id'));
 
+    // Cargar info de clase y mensajes
     this.cargarInfoClase();
     this.cargarMensajes();
   }
@@ -76,6 +80,7 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   generarNuevoCodigo() {
+    // Solo moderador o profesor pueden generar código temporal
     if (!this.esModerador() && !this.esProfesor()) return;
 
     if (this.temporizador) clearInterval(this.temporizador);
@@ -87,7 +92,7 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     this.claseService.generarCodigoTemporal(this.idClase).subscribe({
       next: (res: { codigo_temp: string }) => {
         this.codigoClase = res.codigo_temp;
-        this.activarTemporizador(); // activa temporizador de 60s
+        this.activarTemporizador();
       },
       error: () => {
         this.errorMessage = 'Error al generar nuevo código';
@@ -97,33 +102,27 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   private activarTemporizador() {
-    this.tiempoRestante = 60; // 1 minuto = 60 segundos
+    this.tiempoRestante = 60; // 60 segundos
     this.mostrarCodigo = true;
     this.cdr.detectChanges();
 
     this.temporizador = setInterval(() => {
       this.tiempoRestante--;
-
       if (this.tiempoRestante <= 0) {
         clearInterval(this.temporizador);
         this.mostrarCodigo = false;
-        this.codigoClase = null; // vuelve a "Generar para ver"
+        this.codigoClase = null;
         this.tiempoRestante = 0;
-        this.cdr.detectChanges();
-      } else {
-        this.cdr.detectChanges(); // refresca contador en HTML
       }
+      this.cdr.detectChanges();
     }, 1000);
   }
 
   cargarMensajes() {
     this.mensajeService.fetchMensajes(this.idClase).subscribe({
       next: (msgs) => {
-        if (this.esModerador() || this.esProfesor()) {
-          this.mensajes = msgs;
-        } else {
-          this.mensajes = msgs.filter(m => m.id_autor === this.user.id);
-        }
+        // TODOS los usuarios ven todos los mensajes
+        this.mensajes = msgs;
         this.cdr.detectChanges();
       },
       error: () => {
@@ -134,12 +133,13 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   enviarMensaje() {
+    // Evita enviar mensaje vacío o si el usuario no puede escribir
     if (!this.nuevoMensaje.trim() || !this.puedeEscribir()) return;
 
     this.mensajeService.enviarMensaje(this.idClase, this.user.id, this.nuevoMensaje).subscribe({
       next: (mensajeCreado: Mensaje) => {
         this.nuevoMensaje = '';
-        this.cargarMensajes();
+        this.cargarMensajes(); // recarga todos los mensajes
       },
       error: () => {
         this.errorMessage = 'No se pudo enviar el mensaje';
@@ -148,6 +148,7 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Roles
   esModerador(): boolean {
     return this.user.rol === 'moderador';
   }
@@ -157,15 +158,17 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   puedeEscribir(): boolean {
-    return this.user.rol === 'alumno';
-  }
+  // Solo los alumnos pueden enviar mensajes
+  return this.user.rol === 'alumno';
+}
+
 
   mostrarMensaje(msg: Mensaje): boolean {
-    if (this.esModerador() || this.esProfesor()) return true;
-    return msg.id_autor === this.user.id;
+    // Todos los mensajes se muestran
+    return true;
   }
 
-  // Método opcional para mostrar tiempo en formato MM:SS
+  // Formato de tiempo MM:SS
   get tiempoFormateado(): string {
     const minutos = Math.floor(this.tiempoRestante / 60);
     const segundos = this.tiempoRestante % 60;
