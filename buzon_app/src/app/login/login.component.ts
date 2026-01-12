@@ -13,11 +13,14 @@ import { User } from '../models/user.model';
   imports: [CommonModule, FormsModule]
 })
 export class LoginComponent {
+
+  // LOGIN
   correo = '';
   pass = '';
   errorMessage = '';
   loading = false;
 
+  // REGISTRO
   mostrarRegistro = false;
   nuevoCorreo = '';
   nuevaContrasena = '';
@@ -31,15 +34,19 @@ export class LoginComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
+  // ======================
   // LOGIN
+  // ======================
   login() {
     this.errorMessage = '';
+
     if (!this.correo.trim().endsWith('@campuscamara.es')) {
       this.errorMessage = 'Solo se permiten correos de @campuscamara.es';
       return;
     }
 
     this.loading = true;
+
     this.authService.login(this.correo, this.pass).subscribe({
       next: (user: User) => {
         this.router.navigate(['/dashboard']);
@@ -52,7 +59,9 @@ export class LoginComponent {
     });
   }
 
+  // ======================
   // REGISTRO
+  // ======================
   toggleRegistro() {
     this.mostrarRegistro = !this.mostrarRegistro;
     this.limpiarRegistro();
@@ -80,14 +89,16 @@ export class LoginComponent {
     }
 
     this.registroLoading = true;
-    this.authService.register(this.nuevoCorreo, this.nuevaContrasena, this.nuevoCorreo, this.nuevoRol)
+
+    this.authService
+      .register(this.nuevoCorreo, this.nuevaContrasena, this.nuevoCorreo, this.nuevoRol)
       .subscribe({
         next: () => {
-          this.registroLoading = false;
           this.mostrarRegistro = false;
           this.correo = this.nuevoCorreo;
           this.pass = '';
           this.limpiarRegistro();
+          this.registroLoading = false;
           this.cdr.detectChanges();
         },
         error: () => {
