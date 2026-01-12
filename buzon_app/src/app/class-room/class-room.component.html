@@ -1,60 +1,56 @@
-<div class="main-wrapper">
-  <header class="class-header">
-    <button class="btn-volver" (click)="volverDashboard()">
-      <span class="arrow">←</span>
-    </button>
-    <h1 class="class-title">{{ claseNombre }}</h1>
+<div class="container-fluid min-vh-100 d-flex flex-column p-0">
+  <!-- HEADER -->
+  <header class="d-flex align-items-center justify-content-start bg-white shadow-sm p-3">
+    <button class="btn btn-link text-primary me-3" (click)="volverDashboard()">← Volver</button>
+    <h1 class="h5 mb-0 text-primary">{{ claseNombre }}</h1>
   </header>
 
-  <div class="class-room-container">
-    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="flex-grow-1 p-3" style="max-width: 700px; margin: 0 auto; padding-bottom: 100px;">
+    
+    <!-- ERROR -->
+    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
-    <div *ngIf="esModerador() || esProfesor()" class="moderador-tools card mb-3">
+    <!-- HERRAMIENTAS DE MODERADOR/PROFESOR -->
+    <div *ngIf="esModerador() || esProfesor()" class="card mb-3">
       <div class="card-body d-flex justify-content-between align-items-center">
-        <div class="codigo-display">
+        <div class="codigo-container">
           <strong>Código Temporal:</strong>
-          <span class="codigo-temp">{{ codigoClase || 'Generar para ver' }}</span>
+          <span class="text-primary fw-bold">{{ codigoClase || 'Generar para ver' }}</span>
         </div>
-
-        <div class="boton-con-tiempo d-flex align-items-center">
+        <div class="d-flex align-items-center">
           <button class="btn btn-primary btn-sm" (click)="generarNuevoCodigo()">Generar Nuevo Código</button>
-          
-          <span *ngIf="mostrarCodigo && tiempoRestante > 0" class="contador ml-2">
-            Duración: <strong>{{ tiempoRestante }}s</strong>
+          <span *ngIf="mostrarCodigo && tiempoRestante > 0" class="text-primary fw-bold ms-2">
+            Duración: {{ tiempoRestante }}s
           </span>
         </div>
       </div>
     </div>
 
-    <div class="mensajes">
-      <div *ngIf="mensajes.length === 0 && !errorMessage && (esModerador() || esProfesor())" class="no-mensajes">
+    <!-- MENSAJES -->
+    <div class="mb-3">
+      <div *ngIf="mensajes.length === 0 && !errorMessage && (esModerador() || esProfesor())" class="alert alert-secondary text-center">
         No hay mensajes de alumnos.
       </div>
 
-      <ng-container *ngFor="let msg of mensajes">
-        <div class="mensaje card mb-2" *ngIf="mostrarMensaje(msg)">
-          <div class="card-body py-2">
-            <span class="message-text">{{ msg.texto }}</span>
-            <small class="text-muted d-block mt-1">Mensaje anónimo - {{ msg.fecha }} {{ msg.hora_minuto }}</small>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-
-    <div class="nuevo-mensaje fixed-bottom bg-white border-top p-3" *ngIf="puedeEscribir()">
-      <div class="input-group">
-        <input type="text" 
-               class="form-control" 
-               placeholder="Escribe tu mensaje (anónimo) en el tablón..." 
-               [(ngModel)]="nuevoMensaje">
-        <div class="input-group-append">
-          <button class="btn btn-primary" 
-                  (click)="enviarMensaje()" 
-                  [disabled]="!nuevoMensaje.trim()">
-            <span class="send-icon">→</span> 
-          </button>
+      <div *ngFor="let msg of mensajes" class="card mb-2">
+        <div class="card-body py-2">
+          <span>{{ msg.texto }}</span>
+          <small class="text-muted d-block mt-1">Mensaje anónimo - {{ msg.fecha }} {{ msg.hora_minuto }}</small>
         </div>
       </div>
     </div>
+    
   </div>
+
+  <!-- NUEVO MENSAJE -->
+  <div *ngIf="puedeEscribir()" class="fixed-bottom bg-white border-top p-3">
+    <div class="input-group" style="max-width: 700px; margin: 0 auto;">
+      <input type="text" class="form-control rounded-start" placeholder="Escribe tu mensaje (anónimo)..." [(ngModel)]="nuevoMensaje">
+      <button class="btn btn-primary rounded-end" (click)="enviarMensaje()" [disabled]="!nuevoMensaje.trim()">
+        → Enviar
+      </button>
+    </div>
+  </div>
+
 </div>

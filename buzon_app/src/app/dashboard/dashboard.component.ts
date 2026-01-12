@@ -1,10 +1,9 @@
-import { Component, OnInit,ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClaseService } from '../services/clase.service';
-import { Clase } from '../models/clase.model';
-import { User } from '../models/user.model';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,64 +13,71 @@ import { User } from '../models/user.model';
   imports: [CommonModule, FormsModule]
 })
 export class DashboardComponent implements OnInit {
-  user!: User;
-  clases: Clase[] = [];
+
+  user: any;
+  clases: any[] = [];
+
+  // Crear clase
   nuevoNombre = '';
   modalCrearClase = false;
   errorMessage = '';
 
-  
-constructor(private claseService: ClaseService, private router: Router, private cdr: ChangeDetectorRef) {}
+  // Registro
+  modalRegistro = false;
+  nuevoCorreo = '';
+  nuevaContrasena = '';
+  nuevoRol: 'alumno' | 'profesor' | 'moderador' = 'alumno';
+  registroError = '';
+  registroLoading = false;
+
+  // Colores posibles
+  claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
+
+  constructor(
+    private claseService: ClaseService,
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-   
-
-     //this.cargarClases();
     const userStorage = localStorage.getItem('user');
-
-      
-
     if (!userStorage) {
       this.router.navigate(['/login']);
       return;
     }
     this.user = JSON.parse(userStorage);
-     console.log("🔵 ngOnInit ejecutado");
-       console.log("➡️ Ejecutando cargarClases()", this.user);
-    this.cargarClases(); // Carga las clases al iniciar
+    this.cargarClases();
   }
 
   cargarClases() {
-  console.log("➡️ Ejecutando cargarClases()", this.user);
-
-  this.claseService.fetchClases(this.user.id, this.user.rol).subscribe({
-    next: (clases) => {
-      console.log("📦 Clases recibidas desde API:", clases);
-
-      if (clases && clases.length > 0) {
-        console.log("🔍 Primera clase recibida:", clases[0]);
+    this.claseService.fetchClases(this.user.id, this.user.rol).subscribe({
+      next: (clases: any[]) => {
+        this.clases = clases.map(clase => {
+          // 1️⃣ Ver si hay color guardado en localStorage
+          const colorLocal = localStorage.getItem(`clase-color-${clase.id_clase}`);
+          if (colorLocal) {
+            clase.colorClase = colorLocal;
+          } else {
+            // 2️⃣ Si no, asignar color basado en índice
+            const color = this.claseColors[this.clases.length % this.claseColors.length] + ' text-white';
+            clase.colorClase = color;
+            // Guardar en localStorage para persistencia
+            localStorage.setItem(`clase-color-${clase.id_clase}`, color);
+          }
+          return clase;
+        });
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Error cargando clases';
       }
-
-      // 👇👇👇 INSERTA ESTO AQUÍ
-      this.clases = clases;
-      this.cdr.detectChanges();   // fuerza a Angular a refrescar
-      console.log("👀 Clases en el componente:", this.clases);
-      // ☝️☝️☝️
-    },
-    error: (err) => {
-      console.error("❌ ERROR en fetchClases:", err);
-      this.errorMessage = 'Error cargando clases';
-    }
-  });
-}
-
-
-
-
+    });
+  }
 
   abrirModalCrearClase() {
     this.nuevoNombre = '';
-    this.errorMessage = ''; // Limpiar errores al abrir el modal
+    this.errorMessage = '';
     this.modalCrearClase = true;
   }
 
@@ -91,74 +97,114 @@ constructor(private claseService: ClaseService, private router: Router, private 
   crearClase() {
     const nombreLimpio = this.nuevoNombre.trim();
     this.errorMessage = '';
+    if (!nombreLimpio) return;
 
-    if (!nombreLimpio) {
-      return; // Valida que el nombre no esté vacío
-    }
-
-    // --- AJUSTE CLAVE: Validación para nombres duplicados ---
-    const nombreDuplicado = this.clases.some(clase => 
-      clase.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
+    const nombreDuplicado = this.clases.some(
+      clase => clase.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
     );
-
     if (nombreDuplicado) {
       this.errorMessage = `Ya existe una clase con el nombre "${nombreLimpio}".`;
-      // Opcional: podrías usar alert, pero actualizar la propiedad errorMessage 
-      // y mostrarla en el modal es mejor práctica.
-      return; 
-    }
-    // --------------------------------------------------------
-
-    const nuevoCodigo = this.generarCodigoAleatorio();
-    this.claseService.crearClase(nombreLimpio, nuevoCodigo, this.user.id).subscribe({
-      next: () => {
-        this.cerrarModalCrearClase(); // Cierra el modal solo si la creación es exitosa
-        this.cargarClases();
-      },
-      error: () => (this.errorMessage = 'No se pudo crear la clase')
-    });
-  }
-  
-  eliminarClase(idClase: number) {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta clase? Esto es irreversible.')) {
       return;
     }
 
-    this.claseService.eliminarClase(idClase).subscribe({
-      next: () => {
-        alert('Clase eliminada con éxito.');
+    const codigo = this.generarCodigoAleatorio();
+    const color = this.claseColors[this.clases.length % this.claseColors.length] + ' text-white';
+
+    this.claseService.crearClase(nombreLimpio, codigo, this.user.id).subscribe({
+      next: (res: any) => {
+        // 1️⃣ Guardar color en localStorage usando el id_clase que devuelve el backend
+        if (res.id_clase) localStorage.setItem(`clase-color-${res.id_clase}`, color);
+
+        this.cerrarModalCrearClase();
         this.cargarClases();
       },
-      error: (err) => {
-        this.errorMessage = 'Error al eliminar la clase.';
-        console.error(err);
+      error: () => {
+        this.errorMessage = 'No se pudo crear la clase';
       }
     });
   }
 
-  entrarClase(clase: Clase) {
+  eliminarClase(idClase: number) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta clase?')) return;
+    this.claseService.eliminarClase(idClase).subscribe({
+      next: () => {
+        localStorage.removeItem(`clase-color-${idClase}`);
+        this.cargarClases();
+      },
+      error: () => {
+        this.errorMessage = 'Error al eliminar la clase.';
+      }
+    });
+  }
+
+  entrarClase(clase: any) {
     this.router.navigate(['/class-room', clase.id_clase]);
   }
 
   unirseClase() {
     const codigo = prompt('Ingresa el código temporal de la clase:');
-    if (!codigo || !codigo.trim()) return;
-    
+    if (!codigo?.trim()) return;
+
     this.claseService.unirseClase(this.user.id, codigo.trim()).subscribe({
       next: () => {
         alert('¡Te has unido a la clase!');
         this.cargarClases();
       },
-      error: (err) => {
-        this.errorMessage = 'No se pudo unir a la clase. Código incorrecto o ya estás unido.';
-        alert('No se pudo unir a la clase. Código incorrecto.');
-        console.error(err);
+      error: () => {
+        alert('Código incorrecto o ya estás unido.');
+      }
+    });
+  }
+
+  abrirModalRegistro() {
+    this.limpiarRegistro();
+    this.modalRegistro = true;
+  }
+
+  cerrarModalRegistro() {
+    this.modalRegistro = false;
+  }
+
+  limpiarRegistro() {
+    this.nuevoCorreo = '';
+    this.nuevaContrasena = '';
+    this.nuevoRol = 'alumno';
+    this.registroError = '';
+    this.registroLoading = false;
+  }
+
+  registrarUsuario() {
+    this.registroError = '';
+    if (!this.nuevoCorreo.endsWith('@campuscamara.es')) {
+      this.registroError = 'Correo inválido (@campuscamara.es)';
+      return;
+    }
+    if (!this.nuevaContrasena.trim()) {
+      this.registroError = 'La contraseña es obligatoria';
+      return;
+    }
+    this.registroLoading = true;
+    this.authService.register(
+      this.nuevoCorreo,
+      this.nuevaContrasena,
+      this.nuevoCorreo,
+      this.nuevoRol
+    ).subscribe({
+      next: () => {
+        alert('Usuario registrado correctamente');
+        this.cerrarModalRegistro();
+        this.registroLoading = false;
+      },
+      error: () => {
+        this.registroError = 'Error al registrar usuario';
+        this.registroLoading = false;
       }
     });
   }
 
   logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
 

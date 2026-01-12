@@ -1,201 +1,97 @@
-@use "sass:color";
-
-// --- VARIABLES DE COLOR (CONSOLIDADAS) ---
-$color-primary-blue: #3f51b5;     // Azul oscuro principal
-$color-secondary-blue: #5c6bc0;  // Azul secundario para botones y hover
-$color-header-bg: #ffffff;        // Blanco para la cabecera
-$color-border: #ddd;              // Gris claro para bordes
-$color-background: #f4f6f9;       // Gris muy claro para el fondo principal
-$color-text: #333;                // Color de texto oscuro
-$color-text-muted: #777;          // Texto secundario
-
-// --- FUENTE ---
-$font-serif: Georgia, 'Times New Roman', Times, serif;
-
-// El contenedor principal ocupa el 100%
 .main-wrapper {
-    min-height: 100vh;
-    background-color: $color-background;
-    font-family: $font-serif; // Aplicamos la fuente serifa al cuerpo
+  min-height: 100vh;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  background-color: #f4f6f9;
 }
 
-// --- BARRA SUPERIOR FIJA (CABECERA) ---
-.class-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: $color-header-bg;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1020; 
-
-    .btn-volver {
-        background: none;
-        border: none;
-        color: $color-primary-blue;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0 10px 0 0;
-        line-height: 1;
-        
-        .arrow {
-            font-weight: bold; 
-        }
-        
-        &:hover {
-            opacity: 0.8;
-        }
-    }
-
-    .class-title {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 500;
-        color: $color-primary-blue;
-    }
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
 }
 
-// --- CONTENEDOR PRINCIPAL (Contenido) ---
-.class-room-container {
-    padding-top: 60px; 
-    padding-bottom: 100px; 
-    max-width: 700px; 
-    margin: 0 auto;
-    padding-left: 15px;
-    padding-right: 15px;
-
-    // Estilo para el error (simulando Bootstrap .alert .alert-danger)
-    .alert-danger {
-        color: #721c24;
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-        padding: .75rem 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid transparent;
-        border-radius: .25rem;
-    }
-
-    // --- HERRAMIENTAS DE MODERADOR ---
-    .moderador-tools {
-        padding: 15px;
-        margin-bottom: 20px;
-        border: 1px solid $color-border;
-        border-radius: 8px;
-        background-color: #e8eaf6; 
-
-        .codigo-display {
-            strong {
-                color: $color-text;
-            }
-            .codigo-temp {
-                font-weight: bold;
-                color: $color-primary-blue;
-                font-size: 1.1em;
-            }
-        }
-        
-        // Estilo del botón (btn btn-primary)
-        .btn-primary {
-            background-color: $color-primary-blue;
-            border-color: $color-primary-blue;
-            &:hover {
-                background-color: color.adjust($color-primary-blue, $lightness: -10%);
-                border-color: color.adjust($color-primary-blue, $lightness: -10%);
-            }
-        }
-
-        // Contenedor para el botón y contador
-        .boton-con-tiempo {
-            display: flex;
-            align-items: center;
-
-            .contador {
-                margin-left: 10px;
-                font-weight: bold;
-                color: $color-primary-blue;
-                font-size: 0.95rem;
-            }
-        }
-    }
-
-    // --- LISTA DE MENSAJES ---
-    .mensajes {
-        margin-bottom: 20px;
-
-        .no-mensajes {
-            padding: 40px;
-            text-align: center;
-            color: #888;
-            background-color: #ffffff;
-            border: 1px dashed $color-border;
-            border-radius: 8px;
-        }
-
-        .mensaje {
-            background-color: #ffffff;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            
-            .message-text {
-                color: $color-text;
-            }
-
-            small {
-                display: block;
-                color: $color-text-muted;
-                font-size: 0.8em;
-                margin-top: 5px;
-            }
-        }
-    }
-
-    .error {
-        color: red;
-        margin-bottom: 10px;
-    }
+.card {
+  border-radius: 8px;
 }
 
-// --- FORMULARIO DE ENVÍO DE MENSAJES (FIJO ABAJO) ---
-.nuevo-mensaje {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 15px;
-    background-color: white;
-    border-top: 1px solid $color-border;
-    z-index: 1020;
-    
-    .input-group {
-        max-width: 700px;
-        margin: 0 auto;
-        
-        .form-control {
-            padding: 10px 15px;
-            border-radius: 20px 0 0 20px; 
-            font-family: inherit;
-        }
-        
-        .input-group-append .btn-primary {
-            background-color: $color-primary-blue;
-            border-color: $color-primary-blue;
-            border-radius: 0 20px 20px 0;
-            padding: 10px 15px;
-            
-            &:hover {
-                background-color: color.adjust($color-primary-blue, $lightness: -10%);
-                border-color: color.adjust($color-primary-blue, $lightness: -10%);
-            }
-        }
-        
-        .send-icon {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-    }
+input.form-control {
+  border-radius: 20px 0 0 20px;
+}
+
+button.btn-primary {
+  border-radius: 0 20px 20px 0;
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+/* Ajustes específicos para el contenedor del código temporal */
+.codigo-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px; /* Aumenta el espacio entre el texto y el código */
+  margin-bottom: 20px; /* Añade margen para mayor espacio */
+  word-wrap: break-word; /* Asegura que el código no se desborde */
+}
+
+.codigo-container .fw-bold {
+  font-size: 1.1em;
+  color: #3f51b5; /* Color de texto personalizado */
+}
+
+/* Para la tarjeta con el botón y temporizador */
+.card-body.d-flex {
+  flex-direction: column;
+  gap: 10px; /* Esto agrega más espacio entre los elementos de la tarjeta */
+}
+
+/* Ajuste para los botones y temporizador */
+.d-flex.align-items-center {
+  justify-content: space-between;
+}
+
+.d-flex.align-items-center button {
+  margin-right: 10px;
+}
+
+.text-primary {
+  font-weight: bold;
+}
+
+.ms-2 {
+  margin-left: 10px;
+}
+
+/* Para la sección de mensajes */
+.mb-3 {
+  margin-bottom: 20px;
+}
+
+/* Nuevo mensaje */
+.fixed-bottom {
+  z-index: 1020;
+  border-top: 1px solid #ddd;
+  padding: 15px;
+  background-color: white;
+}
+
+.input-group {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.input-group .form-control {
+  border-radius: 20px 0 0 20px;
+}
+
+.input-group .btn-primary {
+  border-radius: 0 20px 20px 0;
+  padding: 10px 15px;
+}
+
+input.form-control {
+  font-size: 1rem;
+  padding: 10px;
 }
