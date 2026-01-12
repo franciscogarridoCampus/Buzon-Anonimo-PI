@@ -243,7 +243,6 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
 app.listen(3000, '0.0.0.0', () => {
     console.log('🚀 API corriendo en puerto 3000');
 });
-<<<<<<< HEAD
 
 // Endpoint para validar código de acceso
 app.post('/api/validar-codigo', (req, res) => {
@@ -274,6 +273,3 @@ app.post('/api/validar-codigo', (req, res) => {
         }
     });
 });
-
-=======
->>>>>>> 3e7e21caa51ba4144cac2187028aff36201f772c

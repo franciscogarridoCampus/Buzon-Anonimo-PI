@@ -28,7 +28,10 @@ export class LoginComponent {
   registroError = '';
   registroLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   // ======================
   // LOGIN
