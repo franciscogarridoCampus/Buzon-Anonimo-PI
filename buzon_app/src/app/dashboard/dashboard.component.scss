@@ -1,10 +1,10 @@
 @use "sass:color";
 
-// --- VARIABLES DE COLOR (CONSOLIDADAS) ---
-$color-primary-blue: #3f51b5;
-$color-secondary-blue: #5c6bc0;
+// Colores base...
+$color-primary-blue: #3f51b5; // Azul oscuro principal (para la cabecera)
+$color-secondary-blue: #5c6bc0; // Azul secundario para botones y hover
 $color-card-shadow: rgba(0, 0, 0, 0.1);
-$color-background: #f4f6f9;
+$color-background: #f4f6f9; // Un gris muy claro para el fondo
 $color-text: #333;
 
 // Colores de las clases (5 colores distintos)
@@ -17,17 +17,13 @@ $clase-colors: (
 );
 
 .main-wrapper {
+  // Asegura que ocupe toda la pantalla
   min-height: 100vh;
   background-color: $color-background;
 }
 
-// --- 1. BARRA DE NAVEGACIÓN ---
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: $color-primary-blue;
+// Colores dinámicos para clases (si quieres usar hover personalizado)
+.clase-item {
   color: white;
   box-shadow: 0 2px 4px $color-card-shadow;
 
@@ -44,15 +40,26 @@ $clase-colors: (
   .user-actions {
     display: flex;
     align-items: center;
-    position: relative;
 
-    .profile-wrapper {
-      position: relative;
+    .logout-btn {
+      background: none;
+      border: 1px solid white;
+      color: white;
+      padding: 5px 10px;
+      margin-right: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+
+      &:hover {
+        background-color: color.adjust($color-primary-blue, $lightness: 10%);
+      }
     }
 
     .profile-icon {
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       background-color: white;
       color: $color-primary-blue;
       border-radius: 50%;
@@ -61,124 +68,6 @@ $clase-colors: (
       justify-content: center;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: transform 0.2s;
-
-      &:hover {
-        transform: scale(1.05);
-      }
-    }
-
-    .profile-menu {
-      position: absolute;
-      top: 50px;
-      right: 0;
-      width: 300px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-      padding: 0;
-      z-index: 2000;
-      overflow: hidden;
-      animation: fadeIn 0.2s ease;
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 20px;
-        background-color: #f8f9fa;
-
-        .profile-avatar {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background-color: $color-primary-blue;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 1.1rem;
-          flex-shrink: 0;
-        }
-
-        .profile-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-
-          strong {
-            color: $color-text;
-            font-size: 1rem;
-          }
-
-          small {
-            color: #777;
-            font-size: 0.85rem;
-          }
-        }
-      }
-
-      .profile-divider {
-        margin: 0;
-        border: none;
-        border-top: 1px solid #e0e0e0;
-      }
-
-      .profile-details {
-        padding: 15px 20px;
-
-        p {
-          margin: 0;
-          color: $color-text;
-          font-size: 0.9rem;
-
-          strong {
-            display: inline-block;
-            min-width: 40px;
-          }
-        }
-      }
-
-      .profile-action {
-        width: 100%;
-        background: none;
-        border: none;
-        text-align: left;
-        padding: 12px 20px;
-        cursor: pointer;
-        font-size: 0.95rem;
-        color: $color-text;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        transition: background 0.2s;
-
-        &:hover {
-          background-color: #f0f0f0;
-        }
-
-        &.logout-action {
-          color: #d32f2f;
-
-          .logout-icon {
-            font-size: 1.2rem;
-          }
-        }
-      }
     }
   }
 }
@@ -191,22 +80,19 @@ $clase-colors: (
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 15px $color-card-shadow;
-}
 
-;
+  // Ajuste: si el título principal es ahora el de "Mis Clases"
+  h2 {
+    margin-bottom: 20px;
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
 
-h2 {
-  margin-bottom: 20px;
-  font-size: 1.6rem;
-  font-weight: 500;
-}
-
-;
-
-h3 {
-  margin-bottom: 15px;
-  font-size: 1.2rem;
-  color: #555;
+  h3 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #555;
+  }
 }
 
 .top-section {
@@ -251,7 +137,6 @@ ul {
   margin-bottom: 15px;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
   color: white;
 
@@ -292,21 +177,26 @@ ul {
   }
 }
 
-// --- ESTILO DEL BOTÓN PAPELERA ---
+// --- ESTILO DEL BOTÓN PAPELERA (AJUSTADO: Fondo transparente) ---
 .delete-btn.trash-icon {
-  background: transparent;
+  background: transparent; // Fondo transparente
   border: none;
-  color: white;
+  color: white; // Color del ícono (se verá bien sobre el fondo de clase)
   cursor: pointer;
   font-size: 1.3rem;
   line-height: 1;
-  padding: 5px;
+  padding: 5px; // Añadimos padding para que sea más fácil hacer clic
   transition: opacity 0.2s, color 0.2s;
 
   &:hover {
     opacity: 0.8;
     color: #ffcc80;
   }
+}
+
+// --- ELIMINACIÓN DE ESTILOS NO NECESARIOS (Menú de 3 puntos) ---
+.clase-actions-menu {
+  display: none !important; // Desactivamos completamente el contenedor de 3 puntos
 }
 
 // --- 4. MENSAJE DE NO CLASES ---
@@ -324,215 +214,13 @@ ul {
 }
 
 // --- ESTILOS DE MODAL ---
-.modal-acceso-clase {
-  background-color: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  padding: 0;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.3s ease;
-
-  @keyframes slideIn {
-    from {
-      transform: translateY(-20px);
-      opacity: 0;
-    }
-
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .modal-titulo {
-    padding: 24px;
-    margin: 0 0 20px 0;
-    font-size: 1.5rem;
-    color: $color-text;
-    font-weight: 500;
-  }
-
-  .usuario-info {
-    padding: 0 24px 20px;
-    border-bottom: 1px solid #e0e0e0;
-
-    .usuario-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background-color: #f8f9fa;
-      padding: 12px;
-      border-radius: 8px;
-
-      .usuario-avatar {
-        width: 48px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: $color-secondary-blue;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
-      }
-
-      .usuario-detalles {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-
-        strong {
-          color: $color-text;
-          font-size: 0.95rem;
-        }
-
-        small {
-          color: #777;
-          font-size: 0.85rem;
-        }
-      }
-    }
-  }
-
-  .clase-info {
-    padding: 20px 24px;
-    border-bottom: 1px solid #e0e0e0;
-
-    .clase-seleccionada-nombre {
-      margin: 0 0 8px 0;
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: $color-text;
-    }
-
-    .clase-descripcion {
-      margin: 0;
-      color: #666;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-  }
-
-  .codigo-acceso-container {
-    padding: 20px 24px;
-
-    .codigo-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: $color-text;
-      font-size: 0.95rem;
-    }
-
-    .codigo-instruccion {
-      margin: 0 0 12px 0;
-      color: #666;
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
-    .codigo-input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-
-      &:focus {
-        outline: none;
-        border-color: $color-primary-blue;
-      }
-
-      &::placeholder {
-        color: #999;
-      }
-    }
-
-    .codigo-requisitos {
-      margin: 12px 0 0 0;
-      padding: 0 0 0 20px;
-      list-style: disc;
-      color: #666;
-      font-size: 0.85rem;
-      line-height: 1.6;
-
-      li {
-        margin-bottom: 4px;
-      }
-    }
-
-    .error-mensaje {
-      margin-top: 12px;
-      padding: 10px 12px;
-      background-color: #ffebee;
-      color: #c62828;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-  }
-
-  .modal-acceso-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 20px 24px;
-    border-top: 1px solid #e0e0e0;
-
-    button {
-      padding: 10px 24px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-
-      &.btn-cancelar {
-        background-color: transparent;
-        color: $color-primary-blue;
-
-        &:hover {
-          background-color: #f5f5f5;
-        }
-      }
-
-      &.btn-aceptar {
-        background-color: $color-primary-blue;
-        color: white;
-
-        &:hover {
-          background-color: $color-primary-blue;
-        }
-      }
-
-      &.btn-acceder {
-        background-color: $color-primary-blue;
-        color: white;
-
-        &:hover {
-          background-color: color.adjust($color-primary-blue, $lightness: -10%);
-        }
-      }
-    }
-  }
-}
-
-
-
-
-
-
 .error {
-  color: #d32f2f;
-  margin-top: 10px;
-  font-size: 0.9rem;
+  color: red;
+  margin-bottom: 10px;
 }
 
 .modal-backdrop {
+  // Estilos del modal se mantienen funcionales
   position: fixed;
   top: 0;
   left: 0;
@@ -552,11 +240,6 @@ ul {
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    h3 {
-      margin-bottom: 10px;
-      color: #333;
-    }
 
     input {
       padding: 8px;
@@ -581,10 +264,10 @@ ul {
           background-color: #9fa8da;
           cursor: not-allowed;
         }
+      }
 
-        &:last-child {
-          background-color: #757575;
-        }
+      button:last-child {
+        background-color: #757575;
       }
     }
   }

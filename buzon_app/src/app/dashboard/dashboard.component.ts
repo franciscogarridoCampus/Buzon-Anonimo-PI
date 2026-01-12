@@ -1,10 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClaseService } from '../services/clase.service';
-import { Clase } from '../models/clase.model';
-import { User } from '../models/user.model';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,26 +13,25 @@ import { User } from '../models/user.model';
   imports: [CommonModule, FormsModule]
 })
 export class DashboardComponent implements OnInit {
-  user!: User;
-  clases: Clase[] = [];
+
+  user: any;
+  clases: any[] = [];
+
+  // Crear clase
   nuevoNombre = '';
   modalCrearClase = false;
   errorMessage = '';
-  mostrarPerfil = false;
 
-  modalAccesoClase = false;
-  modalUnirseClase = false;
-  claseSeleccionada: Clase | null = null;
-  codigoAcceso = '';
 
-  constructor(
-    private claseService: ClaseService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
-  ) { }
+  constructor(private claseService: ClaseService, private router: Router, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    const userStorage = sessionStorage.getItem('user');
+
+
+    //this.cargarClases();
+    const userStorage = localStorage.getItem('user');
+
+
 
     if (!userStorage) {
       this.router.navigate(['/login']);
@@ -43,16 +41,7 @@ export class DashboardComponent implements OnInit {
     this.user = JSON.parse(userStorage);
     console.log("🔵 ngOnInit ejecutado");
     console.log("➡️ Ejecutando cargarClases()", this.user);
-    this.cargarClases();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    // Solo cierra el menú si está abierto
-    if (this.mostrarPerfil) {
-      this.mostrarPerfil = false;
-      this.cdr.detectChanges();
-    }
+    this.cargarClases(); // Carga las clases al iniciar
   }
 
   cargarClases() {
@@ -66,17 +55,22 @@ export class DashboardComponent implements OnInit {
           console.log("🔍 Primera clase recibida:", clases[0]);
         }
 
+        // 👇👇👇 INSERTA ESTO AQUÍ
         this.clases = clases;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges();   // fuerza a Angular a refrescar
         console.log("👀 Clases en el componente:", this.clases);
+        // ☝️☝️☝️
       },
       error: (err) => {
         console.error("❌ ERROR en fetchClases:", err);
         this.errorMessage = 'Error cargando clases';
-        this.cdr.detectChanges();
       }
     });
   }
+
+
+
+
 
   abrirModalCrearClase() {
     this.nuevoNombre = '';
@@ -102,137 +96,41 @@ export class DashboardComponent implements OnInit {
     this.errorMessage = '';
 
     if (!nombreLimpio) {
-      return;
+      return; // Valida que el nombre no esté vacío
     }
 
+    // --- AJUSTE CLAVE: Validación para nombres duplicados ---
     const nombreDuplicado = this.clases.some(clase =>
       clase.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
     );
-
     if (nombreDuplicado) {
       this.errorMessage = `Ya existe una clase con el nombre "${nombreLimpio}".`;
+      // Opcional: podrías usar alert, pero actualizar la propiedad errorMessage 
+      // y mostrarla en el modal es mejor práctica.
       return;
-    };
+    }
+    // --------------------------------------------------------
 
     const nuevoCodigo = this.generarCodigoAleatorio();
     this.claseService.crearClase(nombreLimpio, nuevoCodigo, this.user.id).subscribe({
       next: () => {
-        this.cerrarModalCrearClase();
+        this.cerrarModalCrearClase(); // Cierra el modal solo si la creación es exitosa
         this.cargarClases();
       },
-      error: () => {
-        this.errorMessage = 'No se pudo crear la clase';
-        this.cdr.detectChanges();
-      }
+      error: () => (this.errorMessage = 'No se pudo crear la clase')
     });
   }
 
   eliminarClase(idClase: number) {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta clase? Esto es irreversible.')) {
-      return;
-    }
-
+    if (!confirm('¿Estás seguro de que quieres eliminar esta clase?')) return;
     this.claseService.eliminarClase(idClase).subscribe({
       next: () => {
-        alert('Clase eliminada con éxito.');
+        localStorage.removeItem(`clase-color-${idClase}`);
         this.cargarClases();
       },
-      error: (err) => {
+      error: () => {
         this.errorMessage = 'Error al eliminar la clase.';
         console.error(err);
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  abrirModalAccesoClase(clase: Clase) {
-    if (this.user.rol === 'profesor' || this.user.rol === 'alumno') {
-      this.entrarClase(clase);
-      return;
-    }
-    this.claseSeleccionada = clase;
-    this.codigoAcceso = '';
-    this.modalUnirseClase = false;
-    this.modalAccesoClase = true;
-  }
-
-  abrirModalUnirseClase() {
-    this.claseSeleccionada = null;
-    this.codigoAcceso = '';
-    this.errorMessage = '';
-    this.modalUnirseClase = true;
-    this.modalAccesoClase = true;
-  }
-
-  cerrarModalAccesoClase() {
-    this.modalAccesoClase = false;
-    this.modalUnirseClase = false;
-    this.claseSeleccionada = null;
-    this.codigoAcceso = '';
-    this.errorMessage = '';
-  }
-
-  confirmarAccesoClase() {
-    // CASO 1: Unirse a una nueva clase
-    if (this.modalUnirseClase && !this.claseSeleccionada) {
-      this.unirseClaseConCodigo();
-      return;
-    }
-
-    // CASO 2: Acceder a una clase existente
-    if (!this.claseSeleccionada) return;
-
-    // Si es profesor o moderador, acceso directo
-    if (this.user.rol === 'profesor' || this.user.rol === 'moderador') {
-      this.entrarClase(this.claseSeleccionada);
-      return;
-    }
-
-    // Si es alumno, validar código
-    if (this.user.rol === 'alumno') {
-      if (!this.codigoAcceso.trim()) {
-        this.errorMessage = 'Debes introducir el código de acceso';
-        return;
-      }
-
-      this.claseService.validarCodigoAcceso(this.claseSeleccionada.id_clase, this.codigoAcceso.trim()).subscribe({
-        next: (resultado) => {
-          if (resultado.valido) {
-            this.cerrarModalAccesoClase();
-            this.entrarClase(this.claseSeleccionada!);
-          } else {
-            this.errorMessage = 'Código incorrecto o expirado';
-            this.cdr.detectChanges();
-          }
-        },
-        error: () => {
-          this.errorMessage = 'Error al validar el código. Inténtalo de nuevo.';
-          this.cdr.detectChanges();
-        }
-      });
-    }
-  }
-
-  unirseClaseConCodigo() {
-    if (!this.codigoAcceso.trim()) {
-      this.errorMessage = 'Debes introducir el código de la clase';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.claseService.unirseClase(this.user.id, this.codigoAcceso.trim()).subscribe({
-      next: () => {
-        this.errorMessage = '¡Te has unido a la clase con éxito!';
-        this.cerrarModalAccesoClase();
-        this.cargarClases();
-        setTimeout(() => {
-          alert('Te has unido a la clase con exito');
-        }, 100);
-      },
-      error: (err) => {
-        this.errorMessage = 'No se pudo unir a la clase. Verifica el código.';
-        console.error(err);
-        this.cdr.detectChanges();
       }
     });
   }
@@ -263,16 +161,14 @@ export class DashboardComponent implements OnInit {
   }
 
   entrarClase(clase: Clase) {
-    this.cerrarModalAccesoClase();
     this.router.navigate(['/class-room', clase.id_clase]);
   }
 
   unirseClase() {
-    this.abrirModalUnirseClase();
-    //const codigo = prompt('Ingresa el código temporal de la clase:');
-    //if (!codigo || !codigo.trim()) return;
+    const codigo = prompt('Ingresa el código temporal de la clase:');
+    if (!codigo || !codigo.trim()) return;
 
-    /*this.claseService.unirseClase(this.user.id, codigo.trim()).subscribe({
+    this.claseService.unirseClase(this.user.id, codigo.trim()).subscribe({
       next: () => {
         alert('¡Te has unido a la clase!');
         this.cargarClases();
@@ -281,12 +177,13 @@ export class DashboardComponent implements OnInit {
         this.errorMessage = 'No se pudo unir a la clase. Código incorrecto o ya estás unido.';
         alert('No se pudo unir a la clase. Código incorrecto.');
         console.error(err);
-        this.cdr.detectChanges();*/
+      }
+    });
   }
 
 
   logout() {
-    sessionStorage.removeItem('user');
+    localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
 

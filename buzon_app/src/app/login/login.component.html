@@ -1,48 +1,38 @@
-<div class="login-page">
-
-  <!-- LOGIN -->
-  <div class="login-container" *ngIf="!mostrarRegistro">
-    <div class="logo-area">
-      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon">
-      <h1 class="main-title">Buzón Anónimo</h1>
+<div class="login-page d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <div class="login-container card shadow-sm p-4" style="max-width: 350px; width: 100%; border-radius: 12px;">
+    
+    <div class="logo-area text-center mb-4">
+      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon mb-2" style="width: 80px;">
+      <h1 class="main-title mb-0" style="color: #3f51b5; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 1.8rem;">Buzón Anónimo</h1>
     </div>
 
-    <h3 class="form-title">Acceso Usuarios</h3>
+    <h3 class="form-title text-center mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif; font-weight: 600;">Acceso Usuarios</h3>
 
-    <input type="email" [(ngModel)]="correo" placeholder="Correo" class="form-control">
-    <input type="password" [(ngModel)]="pass" placeholder="Contraseña" class="form-control">
+    <input
+      type="email"
+      [(ngModel)]="correo"
+      placeholder="Correo"
+      class="form-control mb-3"
+    >
 
-    <button (click)="login()" [disabled]="loading" class="btn btn-primary btn-block">ENTRAR</button>
+    <input
+      type="password"
+      [(ngModel)]="pass"
+      placeholder="Contraseña"
+      class="form-control mb-3"
+    >
 
-    <div class="register-link">
-      ¿No tienes cuenta? 
-      <a href="javascript:void(0)" (click)="toggleRegistro()">Regístrate aquí</a>
+    <button
+      (click)="login()"
+      [disabled]="loading"
+      class="btn btn-primary btn-block"
+      [ngStyle]="{'background-color': '#5c6bc0', 'border-radius': '6px', 'font-weight': 'bold'}"
+    >
+      ENTRAR
+    </button>
+
+    <div *ngIf="errorMessage" class="text-danger text-center mt-3">
+      {{ errorMessage }}
     </div>
-
-    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
   </div>
-
-  <!-- REGISTRO -->
-  <div class="login-container" *ngIf="mostrarRegistro">
-    <div class="logo-area">
-      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon">
-      <h1 class="main-title">Registro de Usuario</h1>
-    </div>
-
-    <input type="email" [(ngModel)]="nuevoCorreo" placeholder="Correo @campuscamara.es" class="form-control">
-    <input type="password" [(ngModel)]="nuevaContrasena" placeholder="Contraseña" class="form-control">
-
-    <label>Rol:</label>
-    <select [(ngModel)]="nuevoRol" class="form-control">
-      <option value="alumno">Alumno</option>
-      <option value="profesor">Profesor</option>
-      <option value="moderador">Moderador</option>
-    </select>
-
-    <button (click)="registrar()" [disabled]="registroLoading" class="btn btn-primary btn-block">REGISTRAR</button>
-    <button (click)="volverAlLogin()" class="btn btn-primary btn-block">VOLVER AL LOGIN</button>
-
-    <div *ngIf="registroError" class="error">{{ registroError }}</div>
-  </div>
-
 </div>
