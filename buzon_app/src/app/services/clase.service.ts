@@ -9,7 +9,7 @@ import { Clase } from '../models/clase.model';
 export class ClaseService {
   private baseUrl = 'http://localhost:3000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 3. Obtiene las clases del usuario (Moderador, Profesor o Alumno)
   fetchClases(userId: number, rol: string): Observable<Clase[]> {
@@ -44,5 +44,13 @@ export class ClaseService {
   generarCodigoTemporal(idClase: number): Observable<{ codigo_temp: string }> {
     // El backend debe generar un nuevo código, actualizarlo en DB y devolverlo.
     return this.http.put<{ codigo_temp: string }>(`${this.baseUrl}/clase/codigo/${idClase}`, {});
+  }
+
+
+  validarCodigoAcceso(idClase: number, codigo: string): Observable<{ valido: boolean }> {
+    return this.http.post<{ valido: boolean }>(`${this.baseUrl}/validar-codigo`, {
+      id_clase: idClase,
+      codigo_temp: codigo
+    });
   }
 }

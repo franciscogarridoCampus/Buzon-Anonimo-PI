@@ -27,7 +27,7 @@ export class LoginComponent {
   registroError = '';
   registroLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   // LOGIN
   login() {
@@ -40,7 +40,7 @@ export class LoginComponent {
     this.loading = true;
     this.authService.login(this.correo, this.pass).subscribe({
       next: (user: User) => {
-        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
         this.router.navigate(['/dashboard']);
         this.loading = false;
       },

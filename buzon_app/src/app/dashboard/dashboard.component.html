@@ -1,20 +1,43 @@
 <div class="main-wrapper">
-  
+
   <header class="app-header">
     <div class="app-title">
       <span class="logo-text">Buzón Anónimo</span>
     </div>
     <div class="user-actions">
-      <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
-      <div class="profile-icon">A</div>
+      <div class="profile-wrapper">
+        <div class="profile-icon" (click)="togglePerfil($event)">{{ getInicialesUsuario() }}</div>
+
+        <div class="profile-menu" *ngIf="mostrarPerfil" (click)="$event.stopPropagation()">
+          <div class="profile-header">
+            <div class="profile-avatar">{{ getInicialesUsuario() }}</div>
+            <div class="profile-info">
+              <strong>{{ user.nombre }}</strong>
+              <small *ngIf="user.email">{{ user.email }}</small>
+            </div>
+          </div>
+
+          <hr class="profile-divider">
+
+          <div class="profile-details">
+            <p><strong>Rol:</strong> {{ getRolFormateado() }}</p>
+          </div>
+
+          <hr class="profile-divider">
+
+          <button class="profile-action logout-action" (click)="logout()">
+            <span class="logout-icon">🚪</span> Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
   <div class="dashboard-container">
-    
+
     <div class="top-section">
-      <h2 class="main-heading">Mis Clases</h2> 
-      
+      <h2 class="main-heading">Mis Clases</h2>
+
       <div class="acciones-generales">
         <button *ngIf="esModerador()" class="action-btn create-btn" (click)="abrirModalCrearClase()">
           Crear nueva clase
@@ -24,47 +47,101 @@
         </button>
       </div>
     </div>
-    
+
     <div class="clases-list-wrapper">
       <ul *ngIf="clases.length > 0; else noClases">
-        <li *ngFor="let clase of clases; let i = index" class="clase-item" [attr.data-index]="i">
+        <li *ngFor="let clase of clases; let i = index" class="clase-item" [attr.data-index]="i % 5">
           <div class="clase-content" (click)="entrarClase(clase)">
             <span class="clase-nombre">
-              {{ clase.nombre }} 
+              {{ clase.nombre }}
               <span *ngIf="esModerador()" class="creador">(Creada por ti)</span>
             </span>
-         
           </div>
-          
-          <button 
-            *ngIf="esModerador()" 
-            class="delete-btn trash-icon" 
+
+          <button *ngIf="esModerador()" class="delete-btn trash-icon"
             (click)="eliminarClase(clase.id_clase); $event.stopPropagation()">
             🗑️
           </button>
         </li>
       </ul>
-      
+
       <ng-template #noClases>
         <div class="no-clases-message">
           <p>No estás unido a ninguna clase.</p>
         </div>
       </ng-template>
-      
+
     </div>
-    
+
     <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
   </div>
 
-  <div class="modal-backdrop" *ngIf="modalCrearClase">
-    <div class="modal">
+  <div class="modal-backdrop" *ngIf="modalCrearClase" (click)="cerrarModalCrearClase()">
+    <div class="modal" (click)="$event.stopPropagation()">
       <h3>Crear Clase</h3>
       <input type="text" placeholder="Nombre de la clase" [(ngModel)]="nuevoNombre">
+      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
       <div class="modal-buttons">
         <button (click)="crearClase()" [disabled]="!nuevoNombre.trim()">Crear</button>
         <button (click)="cerrarModalCrearClase()">Cancelar</button>
       </div>
     </div>
   </div>
-  
+
+  <!-- MODAL DE ACCESO/UNIRSE A CLASE -->
+  <div class="modal-backdrop" *ngIf="modalAccesoClase" (click)="cerrarModalAccesoClase()">
+    <div class="modal-acceso-clase" (click)="$event.stopPropagation()">
+      <h3 class="modal-titulo">{{ tituloModalAcceso }}</h3>
+
+      <!-- Información del usuario -->
+      <div class="usuario-info">
+        <div class="usuario-header">
+          <div class="usuario-avatar">{{ getInicialesUsuario() }}</div>
+          <div class="usuario-detalles">
+            <strong>{{ user.nombre }}</strong>
+            <small *ngIf="user.email">{{ user.email }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de la clase (solo si hay clase seleccionada) -->
+      <div class="clase-info" *ngIf="claseSeleccionada">
+        <h4 class="clase-seleccionada-nombre">{{ claseSeleccionada.nombre }}</h4>
+        <p class="clase-descripcion">Estás a punto de acceder a esta clase</p>
+      </div>
+
+      <!-- Mensaje para unirse a nueva clase -->
+      <div class="clase-info" *ngIf="!claseSeleccionada && modalUnirseClase">
+        <p class="clase-descripcion">Introduce el código temporal que te ha proporcionado el profesor para unirte a la
+          clase</p>
+      </div>
+
+      <!-- Código de acceso -->
+      <div class="codigo-acceso-container" *ngIf="mostrarCampoCodigoAcceso()">
+        <label class="codigo-label">Código de acceso</label>
+        <p class="codigo-instruccion">{{ mensajeInstruccionCodigo() }}</p>
+        <input type="text" class="codigo-input" placeholder="Introduce el código" [(ngModel)]="codigoAcceso"
+          maxlength="10">
+
+        <ul class="codigo-requisitos">
+          <li>Usa una cuenta autorizada</li>
+          <li>El código es temporal y expira en 60 segundos</li>
+        </ul>
+
+        <div *ngIf="errorMessage" class="error">
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="modal-acceso-buttons">
+        <button class="btn-cancelar" (click)="cerrarModalAccesoClase()">Cancelar</button>
+        <button class="btn-acceder" (click)="confirmarAccesoClase()"
+          [disabled]="mostrarCampoCodigoAcceso() && !codigoAcceso.trim()">
+          {{ textoBotonAcceso() }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
