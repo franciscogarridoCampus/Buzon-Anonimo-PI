@@ -3,11 +3,38 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const badwords = require('./badwords.js');
+const crypto = require('crypto'); // Para HMAC-SHA256
 const app = express();
 
-// Configuración para permitir conexiones desde cualquier sitio
+// --- CONFIGURACIÓN ---
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
+
+// --- CLAVE SECRETA PARA JWT ---
+const SECRET_KEY = "mi_clave_secreta"; // ⚠️ En producción usar .env
+
+// --- FUNCIONES PARA JWT ---
+function base64UrlEncode(data) {
+    return Buffer.from(JSON.stringify(data))
+        .toString('base64')
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+}
+
+function generarJWT(payload) {
+    const header = { alg: "HS256", typ: "JWT" };
+    const encodedHeader = base64UrlEncode(header);
+    const encodedPayload = base64UrlEncode(payload);
+    const signature = crypto
+        .createHmac('sha256', SECRET_KEY)
+        .update(`${encodedHeader}.${encodedPayload}`)
+        .digest('base64')
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
 
 // 💡 Función para generar un código temporal de 6 caracteres
 function generarCodigoAleatorio() {
@@ -63,9 +90,18 @@ app.post('/api/login', (req, res) => {
         else if (data.es_profe) { rol = 'profesor'; nombre = data.nombre_profe; }
         else if (data.es_mod) { rol = 'moderador'; nombre = data.nombre_mod; }
 
+        // 🔑 Generar JWT dinámico
+        const token = generarJWT({
+            sub: data.id_user,
+            nombre: nombre,
+            rol: rol,
+            exp: Math.floor(Date.now() / 1000) + 3600 // expira en 1 hora
+        });
+
         res.json({
             success: true,
-            user: { id: data.id_user, correo: data.correo_cifrado, rol: rol, nombre: nombre }
+            user: { id: data.id_user, correo: data.correo_cifrado, rol: rol, nombre: nombre },
+            token: token
         });
     });
 });
@@ -153,10 +189,7 @@ app.get('/api/mensajes/:idClase', (req, res) => {
 app.post('/api/mensaje', (req, res) => {
     const { texto, id_autor, id_clase } = req.body;
 
-    // Convertimos a minúsculas para comparar sin distinción
     const textoMinus = texto.toLowerCase();
-
-    // Verificamos si contiene alguna palabra prohibida
     const contieneMala = badwords.some(palabra => textoMinus.includes(palabra.toLowerCase()));
 
     if (contieneMala) {
@@ -166,14 +199,11 @@ app.post('/api/mensaje', (req, res) => {
     const fecha = new Date().toISOString().slice(0, 10);
     const hora = new Date().toLocaleTimeString('es-ES', { hour12: false });
     const sql = 'INSERT INTO MENSAJE (texto, fecha, hora_minuto, id_autor, id_clase) VALUES (?, ?, ?, ?, ?)';
-
     db.query(sql, [texto, fecha, hora, id_autor, id_clase], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
 });
-
-// --- NUEVAS RUTAS PARA DASHBOARD / CLASS-ROOM ---
 
 // 8. OBTENER INFO BÁSICA DE LA CLASE
 app.get('/api/clase/:idClase', (req, res) => {
@@ -208,12 +238,12 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
         res.json({ success: true, codigo_temp: nuevoCodigo });
     });
 });
-//Filtro palabras
 
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
     console.log('🚀 API corriendo en puerto 3000');
 });
+<<<<<<< HEAD
 
 // Endpoint para validar código de acceso
 app.post('/api/validar-codigo', (req, res) => {
@@ -245,3 +275,5 @@ app.post('/api/validar-codigo', (req, res) => {
     });
 });
 
+=======
+>>>>>>> 3e7e21caa51ba4144cac2187028aff36201f772c
