@@ -1,6 +1,6 @@
 export interface User {
   id: number;
-  email?: string;
+  correo: string;
   rol: 'alumno' | 'profesor' | 'moderador';
   nombre: string;
 }
