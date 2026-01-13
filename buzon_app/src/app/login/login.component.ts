@@ -28,11 +28,10 @@ export class LoginComponent {
   registroError = '';
   registroLoading = false;
 
-  constructor(
-    private authService: AuthService,
+  constructor(private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   // ======================
   // LOGIN
@@ -49,6 +48,7 @@ export class LoginComponent {
 
     this.authService.login(this.correo, this.pass).subscribe({
       next: (user: User) => {
+        localStorage.setItem('user', JSON.stringify(user));
         this.router.navigate(['/dashboard']);
         this.loading = false;
       },

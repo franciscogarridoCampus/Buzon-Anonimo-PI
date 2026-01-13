@@ -150,8 +150,8 @@ app.get('/api/clases/:id/:rol', (req, res) => {
 app.post('/api/crear-clase', (req, res) => {
     const { nombre, id_creador } = req.body;
     const codigoInicial = generarCodigoAleatorio();
-    db.query('INSERT INTO CLASE (nombre, codigo_temp, id_creador) VALUES (?, ?, ?)', 
-        [nombre, codigoInicial, id_creador], 
+    db.query('INSERT INTO CLASE (nombre, codigo_temp, id_creador) VALUES (?, ?, ?)',
+        [nombre, codigoInicial, id_creador],
         (err) => {
             if (err) return res.status(500).json({ success: false, error: err.message });
             res.json({ success: true, codigo: codigoInicial });
@@ -243,4 +243,34 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
     console.log('🚀 API corriendo en puerto 3000');
+});
+
+// Endpoint para validar código de acceso
+app.post('/api/validar-codigo', (req, res) => {
+    const { id_clase, codigo_temp } = req.body;
+
+    if (!id_clase || !codigo_temp) {
+        return res.status(400).json({ valido: false, error: 'Datos incompletos' });
+    }
+
+    const query = `
+    SELECT codigo_temp, codigo_temp_expira 
+    FROM clases 
+    WHERE id_clase = ? 
+    AND codigo_temp = ?
+    AND codigo_temp_expira > NOW()
+  `;
+
+    db.query(query, [id_clase, codigo_temp], (err, results) => {
+        if (err) {
+            console.error('Error al validar código:', err);
+            return res.status(500).json({ valido: false, error: 'Error del servidor' });
+        }
+
+        if (results.length > 0) {
+            res.json({ valido: true });
+        } else {
+            res.json({ valido: false, error: 'Código incorrecto o expirado' });
+        }
+    });
 });

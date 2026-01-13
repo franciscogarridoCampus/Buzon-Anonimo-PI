@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClaseService } from '../services/clase.service';
 import { AuthService } from '../services/auth.service';
+import { Clase } from '../models/clase.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,56 +22,62 @@ export class DashboardComponent implements OnInit {
   nuevoNombre = '';
   modalCrearClase = false;
   errorMessage = '';
+  mostrarPerfil = false;
 
-  // Registro
-  modalRegistro = false;
-  nuevoCorreo = '';
-  nuevaContrasena = '';
-  nuevoRol: 'alumno' | 'profesor' | 'moderador' = 'alumno';
-  registroError = '';
-  registroLoading = false;
-
-  // Colores posibles
-  claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
+  // Modal de acceso
+  modalAccesoClase = false;
+  modalUnirseClase = false;
+  claseSeleccionada: Clase | null = null;
+  codigoAcceso = '';
 
   constructor(
     private claseService: ClaseService,
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    const userStorage = localStorage.getItem('user');
+    const userStorage = sessionStorage.getItem('user');
+
     if (!userStorage) {
       this.router.navigate(['/login']);
       return;
     }
+
     this.user = JSON.parse(userStorage);
+    console.log("🔵 ngOnInit ejecutado");
+    console.log("➡️ Ejecutando cargarClases()", this.user);
     this.cargarClases();
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.mostrarPerfil) {
+      this.mostrarPerfil = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   cargarClases() {
+    console.log("➡️ Ejecutando cargarClases()", this.user);
+
     this.claseService.fetchClases(this.user.id, this.user.rol).subscribe({
-      next: (clases: any[]) => {
-        this.clases = clases.map(clase => {
-          // 1️⃣ Ver si hay color guardado en localStorage
-          const colorLocal = localStorage.getItem(`clase-color-${clase.id_clase}`);
-          if (colorLocal) {
-            clase.colorClase = colorLocal;
-          } else {
-            // 2️⃣ Si no, asignar color basado en índice
-            const color = this.claseColors[this.clases.length % this.claseColors.length] + ' text-white';
-            clase.colorClase = color;
-            // Guardar en localStorage para persistencia
-            localStorage.setItem(`clase-color-${clase.id_clase}`, color);
-          }
-          return clase;
-        });
+      next: (clases) => {
+        console.log("📦 Clases recibidas desde API:", clases);
+
+        if (clases && clases.length > 0) {
+          console.log("🔍 Primera clase recibida:", clases[0]);
+        }
+
+        this.clases = clases;
         this.cdr.detectChanges();
+        console.log("👀 Clases en el componente:", this.clases);
       },
-      error: () => {
+      error: (err) => {
+        console.error("❌ ERROR en fetchClases:", err);
         this.errorMessage = 'Error cargando clases';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -97,118 +104,192 @@ export class DashboardComponent implements OnInit {
   crearClase() {
     const nombreLimpio = this.nuevoNombre.trim();
     this.errorMessage = '';
-    if (!nombreLimpio) return;
 
-    const nombreDuplicado = this.clases.some(
-      clase => clase.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
+    if (!nombreLimpio) {
+      return;
+    }
+
+    const nombreDuplicado = this.clases.some(clase =>
+      clase.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
     );
+
     if (nombreDuplicado) {
       this.errorMessage = `Ya existe una clase con el nombre "${nombreLimpio}".`;
       return;
     }
 
-    const codigo = this.generarCodigoAleatorio();
-    const color = this.claseColors[this.clases.length % this.claseColors.length] + ' text-white';
-
-    this.claseService.crearClase(nombreLimpio, codigo, this.user.id).subscribe({
-      next: (res: any) => {
-        // 1️⃣ Guardar color en localStorage usando el id_clase que devuelve el backend
-        if (res.id_clase) localStorage.setItem(`clase-color-${res.id_clase}`, color);
-
+    const nuevoCodigo = this.generarCodigoAleatorio();
+    this.claseService.crearClase(nombreLimpio, nuevoCodigo, this.user.id).subscribe({
+      next: () => {
         this.cerrarModalCrearClase();
         this.cargarClases();
       },
       error: () => {
         this.errorMessage = 'No se pudo crear la clase';
+        this.cdr.detectChanges();
       }
     });
   }
 
   eliminarClase(idClase: number) {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta clase?')) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar esta clase? Esto es irreversible.')) {
+      return;
+    }
+
     this.claseService.eliminarClase(idClase).subscribe({
       next: () => {
+        alert('Clase eliminada con éxito.');
         localStorage.removeItem(`clase-color-${idClase}`);
         this.cargarClases();
       },
-      error: () => {
+      error: (err) => {
         this.errorMessage = 'Error al eliminar la clase.';
+        console.error(err);
+        this.cdr.detectChanges();
       }
     });
   }
 
-  entrarClase(clase: any) {
+  // ========== MÉTODOS DEL MODAL DE ACCESO ==========
+
+  abrirModalAccesoClase(clase: Clase) {
+    // Si es profesor o moderador, entrar directamente SIN modal
+    if (this.user.rol === 'profesor' || this.user.rol === 'moderador') {
+      this.entrarClase(clase);
+      return;
+    }
+
+    // Solo alumnos ven el modal
+    this.claseSeleccionada = clase;
+    this.codigoAcceso = '';
+    this.modalUnirseClase = false;
+    this.modalAccesoClase = true;
+  }
+
+  abrirModalUnirseClase() {
+    this.claseSeleccionada = null;
+    this.codigoAcceso = '';
+    this.modalUnirseClase = true;
+    this.modalAccesoClase = true;
+  }
+
+  cerrarModalAccesoClase() {
+    this.modalAccesoClase = false;
+    this.modalUnirseClase = false;
+    this.claseSeleccionada = null;
+    this.codigoAcceso = '';
+  }
+
+  confirmarAccesoClase() {
+    // CASO 1: Unirse a una nueva clase
+    if (this.modalUnirseClase && !this.claseSeleccionada) {
+      this.unirseClaseConCodigo();
+      return;
+    }
+
+    // CASO 2: Acceder a una clase existente (alumno)
+    if (!this.claseSeleccionada) return;
+
+    if (!this.codigoAcceso.trim()) {
+      alert('Debes introducir el código de acceso');
+      return;
+    }
+
+    // Validar código para alumnos
+    this.claseService.validarCodigoAcceso(this.claseSeleccionada.id_clase, this.codigoAcceso.trim()).subscribe({
+      next: (resultado) => {
+        if (resultado.valido) {
+          this.cerrarModalAccesoClase();
+          this.entrarClase(this.claseSeleccionada!);
+        } else {
+          alert('Código incorrecto o expirado');
+        }
+      },
+      error: () => {
+        alert('Error al validar el código. Inténtalo de nuevo.');
+      }
+    });
+  }
+
+  unirseClaseConCodigo() {
+    if (!this.codigoAcceso.trim()) {
+      alert('Debes introducir el código de la clase');
+      return;
+    }
+
+    this.claseService.unirseClase(this.user.id, this.codigoAcceso.trim()).subscribe({
+      next: () => {
+        alert('¡Te has unido a la clase con éxito!');
+        this.cerrarModalAccesoClase();
+        this.cargarClases();
+      },
+      error: (err) => {
+        alert('No se pudo unir a la clase. Verifica el código.');
+        console.error(err);
+      }
+    });
+  }
+
+  mostrarCampoCodigoAcceso(): boolean {
+    return this.user.rol === 'alumno';
+  }
+
+  mensajeInstruccionCodigo(): string {
+    if (this.modalUnirseClase && !this.claseSeleccionada) {
+      return 'Solicita al profesor el código temporal para unirte a la clase';
+    }
+    return 'Solicita al profesor el código temporal de acceso a la clase';
+  }
+
+  textoBotonAcceso(): string {
+    if (this.modalUnirseClase && !this.claseSeleccionada) {
+      return 'Unirse';
+    }
+    return 'Acceder';
+  }
+
+  get tituloModalAcceso(): string {
+    if (this.modalUnirseClase && !this.claseSeleccionada) {
+      return 'Unirse a una clase';
+    }
+    return 'Acceder a clase';
+  }
+
+  entrarClase(clase: Clase) {
+    this.cerrarModalAccesoClase();
     this.router.navigate(['/class-room', clase.id_clase]);
   }
 
-  unirseClase() {
-    const codigo = prompt('Ingresa el código temporal de la clase:');
-    if (!codigo?.trim()) return;
-
-    this.claseService.unirseClase(this.user.id, codigo.trim()).subscribe({
-      next: () => {
-        alert('¡Te has unido a la clase!');
-        this.cargarClases();
-      },
-      error: () => {
-        alert('Código incorrecto o ya estás unido.');
-      }
-    });
-  }
-
-  abrirModalRegistro() {
-    this.limpiarRegistro();
-    this.modalRegistro = true;
-  }
-
-  cerrarModalRegistro() {
-    this.modalRegistro = false;
-  }
-
-  limpiarRegistro() {
-    this.nuevoCorreo = '';
-    this.nuevaContrasena = '';
-    this.nuevoRol = 'alumno';
-    this.registroError = '';
-    this.registroLoading = false;
-  }
-
-  registrarUsuario() {
-    this.registroError = '';
-    if (!this.nuevoCorreo.endsWith('@campuscamara.es')) {
-      this.registroError = 'Correo inválido (@campuscamara.es)';
-      return;
-    }
-    if (!this.nuevaContrasena.trim()) {
-      this.registroError = 'La contraseña es obligatoria';
-      return;
-    }
-    this.registroLoading = true;
-    this.authService.register(
-      this.nuevoCorreo,
-      this.nuevaContrasena,
-      this.nuevoCorreo,
-      this.nuevoRol
-    ).subscribe({
-      next: () => {
-        alert('Usuario registrado correctamente');
-        this.cerrarModalRegistro();
-        this.registroLoading = false;
-      },
-      error: () => {
-        this.registroError = 'Error al registrar usuario';
-        this.registroLoading = false;
-      }
-    });
-  }
-
   logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
 
   esModerador(): boolean {
     return this.user.rol === 'moderador';
+  }
+
+  togglePerfil(event: Event) {
+    event.stopPropagation();
+    this.mostrarPerfil = !this.mostrarPerfil;
+    this.cdr.detectChanges();
+  }
+
+  getInicialesUsuario(): string {
+    if (!this.user || !this.user.nombre) return 'U';
+    const nombres = this.user.nombre.trim().split(' ');
+    if (nombres.length === 1) {
+      return nombres[0].charAt(0).toUpperCase();
+    }
+    return (nombres[0].charAt(0) + nombres[nombres.length - 1].charAt(0)).toUpperCase();
+  }
+
+  getRolFormateado(): string {
+    const roles: { [key: string]: string } = {
+      'moderador': 'Moderador',
+      'profesor': 'Profesor',
+      'alumno': 'Alumno'
+    };
+    return roles[this.user.rol] || this.user.rol;
   }
 }

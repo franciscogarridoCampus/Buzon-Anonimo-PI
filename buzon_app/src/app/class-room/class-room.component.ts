@@ -6,6 +6,8 @@ import { MensajeService } from '../services/mensaje.service';
 import { ClaseService } from '../services/clase.service';
 import { Mensaje } from '../models/mensaje.model';
 import { User } from '../models/user.model';
+import { interval, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-class-room',
@@ -22,11 +24,12 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   claseNombre: string = 'Cargando...';
-  codigoClase: string | null = null; // código temporal
-  mostrarCodigo: boolean = false;    // si mostrar el código en pantalla
-  tiempoRestante: number = 0;        // segundos restantes
+  codigoClase: string | null = null;
+  mostrarCodigo: boolean = false;
+  tiempoRestante: number = 0;
 
-  private temporizador: any;
+  private temporizador?: ReturnType<typeof setInterval>;
+  private pollingSubscription?: Subscription; // Para la actualización automática
 
   constructor(
     private route: ActivatedRoute,
@@ -34,27 +37,56 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     private mensajeService: MensajeService,
     private claseService: ClaseService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    // Obtener usuario desde localStorage
-    const userStorage = localStorage.getItem('user');
+    const userStorage = sessionStorage.getItem('user');
     if (!userStorage) {
       this.router.navigate(['/login']);
       return;
     }
     this.user = JSON.parse(userStorage);
 
-    // Obtener idClase de la ruta
     this.idClase = Number(this.route.snapshot.paramMap.get('id'));
 
-    // Cargar info de clase y mensajes
     this.cargarInfoClase();
     this.cargarMensajes();
+
+    // 🔄 INICIAR ACTUALIZACIÓN AUTOMÁTICA
+    this.iniciarActualizacionAutomatica();
   }
 
   ngOnDestroy(): void {
     if (this.temporizador) clearInterval(this.temporizador);
+
+    // 🛑 DETENER ACTUALIZACIÓN AUTOMÁTICA al salir del componente
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
+  }
+
+  // 🔄 MÉTODO PARA ACTUALIZACIÓN AUTOMÁTICA
+  iniciarActualizacionAutomatica() {
+    // Actualizar cada 3 segundos (3000ms)
+    // Puedes ajustar este valor: 2000 = 2 seg, 5000 = 5 seg, etc.
+    this.pollingSubscription = interval(3000)
+      .pipe(
+        switchMap(() => this.mensajeService.fetchMensajes(this.idClase))
+      )
+      .subscribe({
+        next: (msgs) => {
+          // Solo actualizar si hay cambios (para evitar parpadeos innecesarios)
+          if (JSON.stringify(this.mensajes) !== JSON.stringify(msgs)) {
+            this.mensajes = msgs;
+            this.cdr.detectChanges();
+            console.log('📨 Mensajes actualizados automáticamente');
+          }
+        },
+        error: (err) => {
+          console.error('Error en actualización automática:', err);
+          // No mostrar error al usuario, simplemente seguir intentando
+        }
+      });
   }
 
   volverDashboard(): void {
@@ -80,7 +112,6 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   generarNuevoCodigo() {
-    // Solo moderador o profesor pueden generar código temporal
     if (!this.esModerador() && !this.esProfesor()) return;
 
     if (this.temporizador) clearInterval(this.temporizador);
@@ -102,7 +133,7 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   private activarTemporizador() {
-    this.tiempoRestante = 60; // 60 segundos
+    this.tiempoRestante = 60;
     this.mostrarCodigo = true;
     this.cdr.detectChanges();
 
@@ -121,7 +152,6 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   cargarMensajes() {
     this.mensajeService.fetchMensajes(this.idClase).subscribe({
       next: (msgs) => {
-        // TODOS los usuarios ven todos los mensajes
         this.mensajes = msgs;
         this.cdr.detectChanges();
       },
@@ -133,13 +163,15 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   enviarMensaje() {
-    // Evita enviar mensaje vacío o si el usuario no puede escribir
     if (!this.nuevoMensaje.trim() || !this.puedeEscribir()) return;
 
     this.mensajeService.enviarMensaje(this.idClase, this.user.id, this.nuevoMensaje).subscribe({
       next: (mensajeCreado: Mensaje) => {
         this.nuevoMensaje = '';
-        this.cargarMensajes(); // recarga todos los mensajes
+        // Ya no necesitas llamar a cargarMensajes() aquí
+        // La actualización automática lo hará en máximo 3 segundos
+        // Pero si quieres actualización instantánea después de enviar:
+        this.cargarMensajes();
       },
       error: () => {
         this.errorMessage = 'No se pudo enviar el mensaje';
@@ -148,7 +180,6 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Roles
   esModerador(): boolean {
     return this.user.rol === 'moderador';
   }
@@ -158,17 +189,13 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   }
 
   puedeEscribir(): boolean {
-  // Solo los alumnos pueden enviar mensajes
-  return this.user.rol === 'alumno';
-}
-
+    return this.user.rol === 'alumno';
+  }
 
   mostrarMensaje(msg: Mensaje): boolean {
-    // Todos los mensajes se muestran
     return true;
   }
 
-  // Formato de tiempo MM:SS
   get tiempoFormateado(): string {
     const minutos = Math.floor(this.tiempoRestante / 60);
     const segundos = this.tiempoRestante % 60;
