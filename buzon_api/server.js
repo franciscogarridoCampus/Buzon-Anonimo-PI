@@ -205,6 +205,7 @@ app.post('/api/mensaje', (req, res) => {
     });
 });
 
+
 // 8. OBTENER INFO BÁSICA DE LA CLASE
 app.get('/api/clase/:idClase', (req, res) => {
     const { idClase } = req.params;
