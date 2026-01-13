@@ -31,6 +31,11 @@ export class DashboardComponent implements OnInit {
   registroError = '';
   registroLoading = false;
 
+  // Modal unirse a clase
+  modalUnirseClase = false;
+  codigoUnirse = '';
+  unirseError = '';
+
   // Mostrar/ocultar contraseña
   mostrarContrasena = false;
   mostrarContrasenaConfirm = false;
@@ -38,9 +43,7 @@ export class DashboardComponent implements OnInit {
   // Colores posibles para clases
   claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
 
-  // -------------------------------
   // PERFIL USUARIO
-  // -------------------------------
   mostrarPerfil = false;
 
   constructor(
@@ -149,20 +152,42 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/class-room', clase.id_clase]);
   }
 
-  unirseClase() {
-    const codigo = prompt('Ingresa el código temporal de la clase:');
-    if (!codigo?.trim()) return;
-
-    this.claseService.unirseClase(this.user.id, codigo.trim()).subscribe({
-      next: () => {
-        alert('¡Te has unido a la clase!');
-        this.cargarClases();
-      },
-      error: () => {
-        alert('Código incorrecto o ya estás unido.');
-      }
-    });
+  // -------------------------------
+  // UNIRSE A CLASE
+  // -------------------------------
+  abrirModalUnirse() {
+    this.codigoUnirse = '';
+    this.unirseError = '';
+    this.modalUnirseClase = true;
   }
+
+  cerrarModalUnirse() {
+    this.modalUnirseClase = false;
+    this.codigoUnirse = '';
+    this.unirseError = '';
+  }
+
+  confirmarUnirseClase() {
+  const codigo = this.codigoUnirse.trim();
+  if (!codigo) return;
+
+  this.claseService.unirseClase(this.user.id, codigo).subscribe({
+    next: (res) => {
+      // Código correcto → cerrar modal y recargar clases
+      this.modalUnirseClase = false;
+      this.cargarClases();
+      this.codigoUnirse = ''; // limpiar input
+      this.unirseError = '';
+    },
+    error: (err) => {
+      // Código incorrecto → mostrar error sin cerrar modal
+      this.unirseError = err.error?.message || 'Código incorrecto o ya estás unido.';
+      // NO cerrar modal ni limpiar el input
+      this.cdr.detectChanges();
+    }
+  });
+}
+
 
   // -------------------------------
   // REGISTRO USUARIO
@@ -219,7 +244,6 @@ export class DashboardComponent implements OnInit {
       this.nuevoRol
     ).subscribe({
       next: () => {
-        alert('Usuario registrado correctamente');
         this.cerrarModalRegistro();
         this.registroLoading = false;
       },

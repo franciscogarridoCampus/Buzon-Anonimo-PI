@@ -36,7 +36,7 @@
         <button *ngIf="esModerador()" class="btn btn-secondary btn-sm" (click)="abrirModalRegistro()">
           <i class="bi bi-person-fill-add me-1"></i> Registrar usuario
         </button>
-        <button *ngIf="!esModerador()" class="btn btn-success btn-sm" (click)="unirseClase()">Unirse a una clase</button>
+        <button *ngIf="!esModerador()" class="btn btn-success btn-sm" (click)="abrirModalUnirse()">Unirse a una clase</button>
       </div>
     </div>
 
@@ -117,4 +117,27 @@
     </div>
   </div>
 
+<!-- MODAL UNIRSE A CLASE -->
+<div class="modal-backdrop d-flex justify-content-center align-items-center" *ngIf="modalUnirseClase">
+  <div class="bg-white rounded p-4 shadow-sm" style="width: 300px;">
+    <h5>Unirse a una clase</h5>
+
+    <!-- Input con clase de error si hay mensaje -->
+    <input 
+      type="text" 
+      class="form-control my-2" 
+      placeholder="Código temporal de la clase" 
+      [(ngModel)]="codigoUnirse"
+      [ngClass]="{'border-danger': unirseError, 'is-invalid': unirseError}"
+      (input)="unirseError = ''"> <!-- Borra el error al escribir -->
+
+    <!-- Mensaje de error -->
+    <div *ngIf="unirseError" class="text-danger mb-2">{{ unirseError }}</div>
+
+    <div class="d-flex justify-content-between mt-3">
+      <button class="btn btn-primary btn-sm" (click)="confirmarUnirseClase()" [disabled]="!codigoUnirse?.trim()">Unirse</button>
+      <button class="btn btn-secondary btn-sm" (click)="cerrarModalUnirse()">Cancelar</button>
+    </div>
+  </div>
 </div>
+

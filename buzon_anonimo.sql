@@ -7,6 +7,20 @@
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
+/*-- 
+
+INSERT INICIAL DEL MODERADOR
+-- Este usuario se crea automáticamente al importar la BD
+
+INSERT INTO usuario (correo_cifrado, contrasena_cifrado)
+VALUES ('moderador@campuscamara.es', '1234');
+
+INSERT INTO moderador (id_user, nombre)
+VALUES (LAST_INSERT_ID(), 'Moderador Ejemplo');
+*/
+
+
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";

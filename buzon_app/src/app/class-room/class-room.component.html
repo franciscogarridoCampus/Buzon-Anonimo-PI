@@ -1,39 +1,13 @@
 <div class="container-fluid min-vh-100 p-0 class-room">
 
-  <!-- HEADER -->
-  <header class="classroom-header d-flex align-items-center px-3">
-    <button class="btn btn-secondary me-3" (click)="volverDashboard()">
-      Volver al Dashboard
-    </button>
-    <h1 class="class-title mb-0">{{ claseNombre }}</h1>
-  </header>
-
-  <!-- CONTENIDO -->
-  <div class="messages-container px-3 pt-3">
-    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
-
-    <!-- CÓDIGO PROFESOR / MODERADOR -->
-    <div *ngIf="esModerador() || esProfesor()" class="code-box mb-3">
-      <div>
-        <small class="text-muted">Código temporal</small>
-        <div class="fw-bold text-primary">
-          {{ codigoClase || 'Generar para ver' }}
-        </div>
-      </div>
-
-      <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-sm btn-outline-primary" (click)="generarNuevoCodigo()">
-          Generar
-        </button>
-        <small *ngIf="mostrarCodigo && tiempoRestante > 0" class="text-muted">{{ tiempoRestante }}s</small>
-      </div>
-    </div>
-  </div>
-
   <!-- CHAT VENTANA DIRECTA -->
   <div class="chat-window">
+
     <!-- CHAT HEADER -->
-    <div class="chat-header">
+    <div class="chat-header d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary btn-sm" (click)="volverDashboard()">
+        ← Volver
+      </button>
       <span class="chat-title">{{ claseNombre }}</span>
     </div>
 
@@ -62,6 +36,20 @@
         <i class="bi bi-send-fill"></i>
       </button>
     </div>
-  </div>
 
+    <!-- CÓDIGO PROFESOR / MODERADOR -->
+    <div *ngIf="esModerador() || esProfesor()" class="code-box mb-3 p-3 bg-white">
+      <div>
+        <small class="text-muted">Código temporal</small>
+        <div class="fw-bold text-primary">{{ codigoClase || 'Generar para ver' }}</div>
+      </div>
+      <div class="d-flex align-items-center gap-2 mt-2">
+        <button class="btn btn-sm btn-outline-primary" (click)="generarNuevoCodigo()">
+          Generar
+        </button>
+        <small *ngIf="mostrarCodigo && tiempoRestante > 0" class="text-muted">{{ tiempoRestante }}s</small>
+      </div>
+    </div>
+
+  </div>
 </div>
