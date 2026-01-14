@@ -247,6 +247,19 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
     });
 });
 
+// 11. ELIMINAR MENSAJE INDIVIDUAL (💡 NUEVA RUTA)
+app.delete('/api/mensaje/:id_mensaje', (req, res) => {
+    const { id_mensaje } = req.params;
+
+    const sql = 'DELETE FROM MENSAJE WHERE id_mensaje = ?';
+    db.query(sql, [id_mensaje], (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: 'Mensaje no encontrado' });
+
+        res.json({ success: true, msg: `Mensaje ${id_mensaje} eliminado correctamente` });
+    });
+});
+
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
     console.log('🚀 API corriendo en puerto 3000');
