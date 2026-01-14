@@ -17,12 +17,16 @@ export class DashboardComponent implements OnInit {
   user: any;
   clases: any[] = [];
 
-  // Crear clase
+  // UI CONTROL
+  mostrarPerfil = false;
+  fabExpandido = false; // Variable para el botón flotante expansible
+
+  // CREAR CLASE
   nuevoNombre = '';
   modalCrearClase = false;
   errorMessage = '';
 
-  // Registro usuario
+  // REGISTRO USUARIO
   modalRegistro = false;
   nuevoCorreo = '';
   nuevaContrasena = '';
@@ -31,20 +35,17 @@ export class DashboardComponent implements OnInit {
   registroError = '';
   registroLoading = false;
 
-  // Modal unirse a clase
+  // MODAL UNIRSE A CLASE
   modalUnirseClase = false;
   codigoUnirse = '';
   unirseError = '';
 
-  // Mostrar/ocultar contraseña
+  // MOSTRAR/OCULTAR CONTRASEÑA
   mostrarContrasena = false;
   mostrarContrasenaConfirm = false;
 
-  // Colores posibles para clases
+  // COLORES POSIBLES PARA CLASES
   claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
-
-  // PERFIL USUARIO
-  mostrarPerfil = false;
 
   constructor(
     private claseService: ClaseService,
@@ -64,7 +65,7 @@ export class DashboardComponent implements OnInit {
   }
 
   // -------------------------------
-  // CLASES
+  // GESTIÓN DE CLASES
   // -------------------------------
   cargarClases() {
     this.claseService.fetchClases(this.user.id, this.user.rol).subscribe({
@@ -92,6 +93,7 @@ export class DashboardComponent implements OnInit {
     this.nuevoNombre = '';
     this.errorMessage = '';
     this.modalCrearClase = true;
+    this.fabExpandido = false; 
   }
 
   cerrarModalCrearClase() {
@@ -168,33 +170,30 @@ export class DashboardComponent implements OnInit {
   }
 
   confirmarUnirseClase() {
-  const codigo = this.codigoUnirse.trim();
-  if (!codigo) return;
+    const codigo = this.codigoUnirse.trim();
+    if (!codigo) return;
 
-  this.claseService.unirseClase(this.user.id, codigo).subscribe({
-    next: (res) => {
-      // Código correcto → cerrar modal y recargar clases
-      this.modalUnirseClase = false;
-      this.cargarClases();
-      this.codigoUnirse = ''; // limpiar input
-      this.unirseError = '';
-    },
-    error: (err) => {
-      // Código incorrecto → mostrar error sin cerrar modal
-      this.unirseError = err.error?.message || 'Código incorrecto o ya estás unido.';
-      // NO cerrar modal ni limpiar el input
-      this.cdr.detectChanges();
-    }
-  });
-}
-
+    this.claseService.unirseClase(this.user.id, codigo).subscribe({
+      next: (res) => {
+        this.modalUnirseClase = false;
+        this.cargarClases();
+        this.codigoUnirse = '';
+        this.unirseError = '';
+      },
+      error: (err) => {
+        this.unirseError = err.error?.message || 'Código incorrecto o ya estás unido.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   // -------------------------------
-  // REGISTRO USUARIO
+  // REGISTRO DE USUARIOS
   // -------------------------------
   abrirModalRegistro() {
     this.limpiarRegistro();
     this.modalRegistro = true;
+    this.fabExpandido = false; 
   }
 
   cerrarModalRegistro() {
@@ -223,14 +222,18 @@ export class DashboardComponent implements OnInit {
   registrarUsuario() {
     this.registroError = '';
 
-    if (!this.nuevoCorreo.endsWith('@campuscamara.es')) {
-      this.registroError = 'Correo inválido (@campuscamara.es)';
+    // Permitir ambos dominios
+    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
+    if (!permitido.some(d => this.nuevoCorreo.endsWith(d))) {
+      this.registroError = `Correo inválido (${permitido.join(' o ')})`;
       return;
     }
+
     if (!this.nuevaContrasena.trim()) {
       this.registroError = 'La contraseña es obligatoria';
       return;
     }
+
     if (this.nuevaContrasena !== this.confirmarContrasena) {
       this.registroError = 'Las contraseñas no coinciden';
       return;
@@ -255,18 +258,11 @@ export class DashboardComponent implements OnInit {
   }
 
   // -------------------------------
-  // PERFIL USUARIO
+  // PERFIL Y SESIÓN
   // -------------------------------
   togglePerfil(event: Event) {
     event.stopPropagation();
     this.mostrarPerfil = !this.mostrarPerfil;
-  }
-
-  getInicialesUsuario(): string {
-    if (!this.user || !this.user.nombre) return 'U';
-    const nombres = this.user.nombre.trim().split(' ');
-    if (nombres.length === 1) return nombres[0].charAt(0).toUpperCase();
-    return (nombres[0].charAt(0) + nombres[nombres.length - 1].charAt(0)).toUpperCase();
   }
 
   getRolFormateado(): string {
@@ -285,17 +281,12 @@ export class DashboardComponent implements OnInit {
   }
 
   esModerador(): boolean {
-    return this.user.rol === 'moderador';
+    return this.user?.rol === 'moderador';
   }
 
-  // -------------------------------
-  // CERRAR MENÚ PERFIL AL HACER CLIC FUERA
-  // -------------------------------
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (this.mostrarPerfil) {
-      this.mostrarPerfil = false;
-      this.cdr.detectChanges();
-    }
+    if (this.mostrarPerfil) this.mostrarPerfil = false;
+    this.cdr.detectChanges();
   }
 }

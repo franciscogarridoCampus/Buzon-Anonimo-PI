@@ -1,119 +1,169 @@
-@use "sass:color";
-
-// Colores de clases
-$clase-colors: (
-  #3f51b5,
-  #4caf50,
-  #ff9800,
-  #e91e63,
-  #00bcd4
-);
-
-body {
-  background-color: #f4f6f9;
-}
-
-.clase-item {
-  color: white;
+/* ESTILO DE TARJETAS */
+.clase-card {
+  border-radius: 1.2rem;
+  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
+  transition: transform 0.2s;
+  border: 2px solid #000;
+  &:hover { transform: translateY(-4px); }
 }
 
-.btn-transparent {
-  background: transparent;
+.clase-header {
+  min-height: 120px;
+  color: white;
+  border-bottom: 2px solid #000;
+}
+
+.clase-footer {
+  background-color: white;
+  color: #5f6368;
+  border-top: 1px solid #eee;
+}
+
+/* PAPELERA MÁS GRANDE Y HOVER NARANJA */
+.btn-trash-custom {
+  background: rgba(0, 0, 0, 0.15);
   border: none;
   color: white;
-  font-size: 1.2rem;
-  line-height: 1;
-  padding: 0;
-  transition: opacity 0.2s, color 0.2s;
-
-  &:hover {
-    opacity: 0.8;
-    color: #ffcc80;
-  }
-}
-
-.input-group .btn {
-  cursor: pointer;
-}
-
-.text-danger {
-  margin-top: 5px;
-}
-
-.modal-backdrop {
-  background-color: rgba(0,0,0,0.5);
-}
-
-.badge {
-  font-size: 0.75rem;
-}
-
-// PERFIL USUARIO
-.perfil-icon {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background-color: #0d6efd;
-  color: white;
-  cursor: pointer;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 2rem;
-  transition: transform 0.2s, background-color 0.2s;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 1.45rem;
 
   &:hover {
-    transform: scale(1.15);
-    background-color: #0b5ed7;
+    background: #ff9f43; 
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   }
 }
 
+/* PERFIL ICONO MÁS GRANDE */
+.perfil-icon {
+  width: 48px;  
+  height: 48px; 
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  font-size: 1.8rem; 
+  transition: background 0.2s;
+  &:hover { background: rgba(255,255,255,0.3); }
+}
+
+/* DROPDOWN ESTILO GOOGLE */
 .perfil-dropdown {
   top: 100%;
   right: 0;
-  background-color: #fff;
-  border-radius: 0.5rem;
-  min-width: 220px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  animation: fadeIn 0.2s ease-in-out;
+  background: white;
+  border: 2px solid #000;
+  border-radius: 10px;
+  min-width: 260px;
+  z-index: 1100;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.05);
 }
 
-.perfil-info {
-  display: flex;
-  flex-direction: column;
+.perfil-email-text {
+  font-weight: 700;
+  color: #000;
+  font-size: 0.95rem;
+  letter-spacing: -0.2px;
 }
 
 .rol-badge {
-  font-size: 0.75rem;
-  padding: 0.25em 0.5em;
-  background-color: #6c757d;
-  color: white;
-  border-radius: 0.25rem;
-  align-self: start;
+  background: white;
+  color: #000;
+  border: 1.2px solid #000;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  border-radius: 5px;
 }
 
-.btn-logout {
-  background-color: #dc3545;
-  color: white;
-  font-weight: 500;
+.btn-logout-dark {
+  background: #000;
+  color: #fff;
   border: none;
-  transition: background-color 0.2s;
-  padding: 0.4rem;
-
-  &:hover {
-    background-color: #c82333;
-  }
+  border-radius: 6px;
+  font-weight: bold;
+  &:hover { background: #333; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+/* FAB */
+.fab-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 1050;
+}
+
+.fab-options {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.fab-option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.btn-fab-main {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #004dc1;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &.active { transform: rotate(0deg); background-color: #333; }
+}
+
+.btn-fab-mini {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab-label {
+  background: white;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border: 1px solid #000;
+}
+
+/* MODALES */
+.modal-custom-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-card {
+  background: white;
+  border-radius: 15px;
+  border: 2.5px solid #000;
+  max-width: 320px;
 }

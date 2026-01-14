@@ -1,25 +1,95 @@
-$color-main-blue: #3f51b5;
-$color-button-blue: #5c6bc0;
-$color-background: #e9eef6;
+// Colores basados en el mockup
+$brand-blue: #004dc1; 
+$black: #000000;
+$gray-light: #f8f9fa;
 
 .login-page {
-  background-color: $color-background;
+  background-color: #fff; // Fondo blanco limpio
+}
+
+.login-wrapper {
+  max-width: 380px;
+  width: 100%;
 }
 
 .logo-icon {
-  width: 80px;
+  width: 70px;
   height: auto;
 }
 
 .main-title {
-  color: $color-main-blue;
+  color: $brand-blue;
+  font-weight: bold;
+  font-size: 1.8rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.btn-primary {
-  background-color: $color-button-blue;
+/* CAJA PRINCIPAL CON BORDE NEGRO */
+.login-box {
+  border: 2.5px solid $black; // Borde grueso como la imagen
+  border-radius: 15px;
+  background-color: white;
+}
+
+.form-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: $black;
+}
+
+/* INPUTS ESTILO PÍLDORA CON BORDE NEGRO */
+.custom-input {
+  border: 2.5px solid $black;
+  border-radius: 50px; // Forma de píldora
+  overflow: hidden;
+  transition: transform 0.2s;
+
+  &:focus-within {
+    transform: scale(1.02);
+  }
+
+  .separator {
+    width: 1.5px;
+    background-color: #dee2e6;
+    margin: 8px 0;
+  }
+
+  .form-control {
+    padding: 0.75rem;
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  .input-group-text {
+    color: #495057;
+  }
+}
+
+/* BOTÓN AZUL REDONDEADO */
+.btn-entrar {
+  background-color: $brand-blue;
+  color: white;
+  border-radius: 50px;
+  padding: 12px;
+  font-weight: bold;
+  font-size: 1rem;
   border: none;
+  transition: background-color 0.2s, opacity 0.2s;
 
   &:hover {
-    background-color: darken($color-button-blue, 10%);
+    background-color: darken($brand-blue, 10%);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 400px) {
+  .login-wrapper {
+    max-width: 320px;
   }
 }

@@ -14,13 +14,11 @@ import { User } from '../models/user.model';
 })
 export class LoginComponent {
 
-  // LOGIN
   correo = '';
   pass = '';
   errorMessage = '';
   loading = false;
 
-  // REGISTRO
   mostrarRegistro = false;
   nuevoCorreo = '';
   nuevaContrasena = '';
@@ -33,14 +31,12 @@ export class LoginComponent {
     private cdr: ChangeDetectorRef
   ) { }
 
-  // ======================
-  // LOGIN
-  // ======================
   login() {
     this.errorMessage = '';
 
-    if (!this.correo.trim().endsWith('@campuscamara.es')) {
-      this.errorMessage = 'Solo se permiten correos de @campuscamara.es';
+    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
+    if (!permitido.some(d => this.correo.trim().endsWith(d))) {
+      this.errorMessage = `Solo se permiten correos de ${permitido.join(' o ')}`;
       return;
     }
 
@@ -59,9 +55,6 @@ export class LoginComponent {
     });
   }
 
-  // ======================
-  // REGISTRO
-  // ======================
   toggleRegistro() {
     this.mostrarRegistro = !this.mostrarRegistro;
     this.limpiarRegistro();
@@ -77,12 +70,11 @@ export class LoginComponent {
 
   registrar() {
     this.registroError = '';
-
-    if (!this.nuevoCorreo.trim() || !this.nuevoCorreo.endsWith('@campuscamara.es')) {
-      this.registroError = 'Correo inválido (@campuscamara.es)';
+    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
+    if (!this.nuevoCorreo.trim() || !permitido.some(d => this.nuevoCorreo.endsWith(d))) {
+      this.registroError = `Correo inválido (${permitido.join(' o ')})`;
       return;
     }
-
     if (!this.nuevaContrasena.trim()) {
       this.registroError = 'Contraseña vacía';
       return;
@@ -90,8 +82,7 @@ export class LoginComponent {
 
     this.registroLoading = true;
 
-    this.authService
-      .register(this.nuevoCorreo, this.nuevaContrasena, this.nuevoCorreo, this.nuevoRol)
+    this.authService.register(this.nuevoCorreo, this.nuevaContrasena, this.nuevoCorreo, this.nuevoRol)
       .subscribe({
         next: () => {
           this.mostrarRegistro = false;

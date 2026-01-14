@@ -18,4 +18,9 @@ export class MensajeService {
   enviarMensaje(idClase: number, idAutor: number, texto: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/mensaje`, { id_clase: idClase, id_autor: idAutor, texto });
   }
+
+  // Nuevo método para eliminar un mensaje
+  eliminarMensaje(idMensaje: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/mensaje/${idMensaje}`);
+  }
 }

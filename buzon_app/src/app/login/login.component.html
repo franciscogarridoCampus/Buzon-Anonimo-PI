@@ -1,38 +1,51 @@
 <div class="login-page d-flex align-items-center justify-content-center min-vh-100 p-3">
-  <div class="login-container card shadow-sm p-4" style="max-width: 350px; width: 100%; border-radius: 12px;">
+  <div class="login-wrapper">
     
     <div class="logo-area text-center mb-4">
-      <img src="assets/icons/logo.png" alt="Buzón Anónimo Logo" class="logo-icon mb-2" style="width: 80px;">
-      <h1 class="main-title mb-0" style="color: #3f51b5; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 1.8rem;">Buzón Anónimo</h1>
+      <img src="assets/icons/logo.png" alt="Logo" class="logo-icon mb-2">
+      <h1 class="main-title">Buzón Anónimo</h1>
     </div>
 
-    <h3 class="form-title text-center mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif; font-weight: 600;">Acceso Usuarios</h3>
+    <div class="login-box p-4 shadow-sm">
+      <h3 class="form-title text-center mb-4">Acceso Usuarios</h3>
 
-    <input
-      type="email"
-      [(ngModel)]="correo"
-      placeholder="Correo"
-      class="form-control mb-3"
-    >
+      <div class="input-group custom-input mb-3">
+        <span class="input-group-text bg-white border-0 ps-3">
+          <i class="bi bi-envelope fs-5"></i>
+        </span>
+        <div class="separator"></div>
+        <input
+          type="email"
+          [(ngModel)]="correo"
+          placeholder="Correo"
+          class="form-control border-0"
+        >
+      </div>
 
-    <input
-      type="password"
-      [(ngModel)]="pass"
-      placeholder="Contraseña"
-      class="form-control mb-3"
-    >
+      <div class="input-group custom-input mb-4">
+        <span class="input-group-text bg-white border-0 ps-3">
+          <i class="bi bi-lock fs-5"></i>
+        </span>
+        <div class="separator"></div>
+        <input
+          type="password"
+          [(ngModel)]="pass"
+          placeholder="Contraseña"
+          class="form-control border-0"
+        >
+      </div>
 
-    <button
-      (click)="login()"
-      [disabled]="loading"
-      class="btn btn-primary btn-block"
-      [ngStyle]="{'background-color': '#5c6bc0', 'border-radius': '6px', 'font-weight': 'bold'}"
-    >
-      ENTRAR
-    </button>
+      <button
+        (click)="login()"
+        [disabled]="loading"
+        class="btn btn-entrar w-100"
+      >
+        ENTRAR
+      </button>
 
-    <div *ngIf="errorMessage" class="text-danger text-center mt-3">
-      {{ errorMessage }}
+      <div *ngIf="errorMessage" class="text-danger text-center mt-3 small fw-bold">
+        {{ errorMessage }}
+      </div>
     </div>
   </div>
 </div>
