@@ -104,15 +104,11 @@ Exposición de una API REST que gestiona la lógica del sistema.
 
   Insertar usuarios de ejemplo:
 
-   INSERT INTO usuario (id_user, correo_cifrado, contrasena_cifrado) 
-   VALUES 
-   (1, 'profesor@example.com', '1234'),
-   (2, 'moderador@example.com', '1234'),
-   (3, 'alumno@example.com', '1234');
+   INSERT INTO usuario (correo_cifrado, contrasena_cifrado)
+VALUES ('moderador@campuscamara.es', '1234');
 
-   INSERT INTO profesor (id_user, nombre) VALUES (1, 'Profesor Ejemplo');
-   INSERT INTO moderador (id_user, nombre) VALUES (2, 'Moderador Ejemplo');
-   INSERT INTO alumno (id_user) VALUES (3);
+INSERT INTO moderador (id_user, nombre)
+VALUES (LAST_INSERT_ID(), 'Moderador Ejemplo');
 
 
 
