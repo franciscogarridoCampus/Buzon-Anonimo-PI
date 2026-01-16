@@ -47,6 +47,11 @@ export class DashboardComponent implements OnInit {
   // COLORES POSIBLES PARA CLASES
   claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
 
+  // -------------------------------
+  // VIÑETA ELIMINAR CLASE
+  // -------------------------------
+  clasePendienteEliminar: number | null = null;
+
   constructor(
     private claseService: ClaseService,
     private authService: AuthService,
@@ -137,15 +142,27 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  eliminarClase(idClase: number) {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta clase?')) return;
+  // -------------------------------
+  // ELIMINAR CLASE CON VIÑETA
+  // -------------------------------
+  solicitarEliminarClase(idClase: number) {
+    this.clasePendienteEliminar = idClase;
+  }
+
+  cancelarEliminarClase() {
+    this.clasePendienteEliminar = null;
+  }
+
+  confirmarEliminarClase(idClase: number) {
     this.claseService.eliminarClase(idClase).subscribe({
       next: () => {
         localStorage.removeItem(`clase-color-${idClase}`);
+        this.clasePendienteEliminar = null;
         this.cargarClases();
       },
       error: () => {
         this.errorMessage = 'Error al eliminar la clase.';
+        this.clasePendienteEliminar = null;
       }
     });
   }
@@ -222,7 +239,6 @@ export class DashboardComponent implements OnInit {
   registrarUsuario() {
     this.registroError = '';
 
-    // Permitir ambos dominios
     const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
     if (!permitido.some(d => this.nuevoCorreo.endsWith(d))) {
       this.registroError = `Correo inválido (${permitido.join(' o ')})`;

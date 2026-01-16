@@ -1,26 +1,57 @@
 /* ESTILO DE TARJETAS */
 .clase-card {
   border-radius: 1.2rem;
-  overflow: hidden;
+  overflow: visible; // Cambiado a visible para que la burbuja no se corte
   cursor: pointer;
   transition: transform 0.2s;
   border: 2px solid #000;
+  position: relative;
   &:hover { transform: translateY(-4px); }
 }
 
 .clase-header {
+  border-radius: 1.1rem 1.1rem 0 0; // Ajuste para mantener la forma
   min-height: 120px;
   color: white;
   border-bottom: 2px solid #000;
 }
 
 .clase-footer {
+  border-radius: 0 0 1.1rem 1.1rem;
   background-color: white;
   color: #5f6368;
   border-top: 1px solid #eee;
 }
 
-/* PAPELERA MÁS GRANDE Y HOVER NARANJA */
+/* BURBUJA DE CONFIRMACIÓN FUERA DE LA TARJETA */
+.confirm-bubble {
+  position: absolute;
+  top: -10px; // La saca un poco hacia arriba
+  right: -10px; // La saca un poco hacia la derecha
+  background: white;
+  border: 2px solid #000;
+  padding: 10px 15px;
+  border-radius: 50px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  
+  i {
+    font-size: 1.5rem;
+    transition: transform 0.1s;
+    &:hover { transform: scale(1.2); }
+  }
+
+  .divider-v {
+    width: 2px;
+    height: 20px;
+    background: #000;
+    margin: 0 10px;
+    opacity: 0.2;
+  }
+}
+
+/* PAPELERA */
 .btn-trash-custom {
   background: rgba(0, 0, 0, 0.15);
   border: none;
@@ -35,14 +66,14 @@
   font-size: 1.45rem;
 
   &:hover {
-    background: #ff9f43; 
+    background: #ff4b2b; // Color más agresivo para eliminar
     color: white;
     transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   }
 }
 
-/* PERFIL ICONO MÁS GRANDE */
+/* PERFIL ICONO */
 .perfil-icon {
   width: 48px;  
   height: 48px; 
@@ -54,7 +85,7 @@
   &:hover { background: rgba(255,255,255,0.3); }
 }
 
-/* DROPDOWN ESTILO GOOGLE */
+/* DROPDOWN */
 .perfil-dropdown {
   top: 100%;
   right: 0;
