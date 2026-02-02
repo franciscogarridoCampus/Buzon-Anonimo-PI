@@ -1,85 +1,127 @@
 <div class="container-fluid min-vh-100 p-0 bg-light d-flex flex-column">
   
   <nav class="navbar navbar-light bg-white border-bottom px-3 sticky-top">
-    <div class="d-flex align-items-center">
-      <button class="btn btn-link text-dark p-0" (click)="volverDashboard()">
-        <i class="bi bi-arrow-left fs-4"></i>
-      </button>
-      <span class="navbar-brand mb-0 h1 ms-3 text-truncate">{{ claseNombre }}</span>
+    <div class="d-flex align-items-center w-100">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-link text-dark p-0" (click)="volverDashboard()">
+          <i class="bi bi-arrow-left fs-4"></i>
+        </button>
+        <span class="navbar-brand mb-0 h1 ms-3 text-truncate">{{ claseNombre }}</span>
+      </div>
+
+      <div class="ms-auto d-flex gap-4">
+        <button class="btn btn-tab" [class.active]="tabActiva === 'tablon'" (click)="cambiarTab('tablon')">
+          Tablón
+        </button>
+        <button class="btn btn-tab" [class.active]="tabActiva === 'personas'" (click)="cambiarTab('personas')">
+          Personas
+        </button>
+      </div>
     </div>
   </nav>
 
   <div class="container py-3 flex-grow-1 d-flex flex-column">
     
-    <div class="banner-clase shadow-sm mb-4 p-4 text-white">
-      <h2 class="display-6 fw-bold mb-1">{{ claseNombre }}</h2>
-      
-      <div *ngIf="esModerador() || esProfesor()" class="mt-3">
-        <div class="d-flex align-items-center gap-2">
-          <span class="fs-5">Código: <strong>{{ mostrarCodigo ? codigoClase : '****' }}</strong></span>
-          <button class="btn btn-sm btn-light fw-bold" 
-                  (click)="generarNuevoCodigo()" 
-                  [disabled]="mostrarCodigo">
-            {{ mostrarCodigo ? tiempoRestante + 's' : 'Generar para ver' }}
+    <ng-container *ngIf="tabActiva === 'tablon'">
+      <div class="banner-clase shadow-sm mb-4 p-4 text-white animate__animated animate__fadeIn"
+           [ngClass]="!bannerImagen ? bannerColor : ''"
+           [style.backgroundImage]="bannerImagen ? 'url(' + bannerImagen + ')' : ''"
+           style="background-size: cover; background-position: center;">
+        
+        <h2 class="display-6 fw-bold mb-1" [class.text-outline]="bannerImagen">{{ claseNombre }}</h2>
+        
+        <div *ngIf="esModerador() || esProfesor()" class="mt-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5 shadow-text">Código: <strong>{{ mostrarCodigo ? codigoClase : '****' }}</strong></span>
+            <button class="btn btn-sm btn-light fw-bold shadow-sm" 
+                    (click)="generarNuevoCodigo()" 
+                    [disabled]="mostrarCodigo">
+              {{ mostrarCodigo ? tiempoRestante + 's' : 'Generar para ver' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-container flex-grow-1 mb-5">
+        <div *ngIf="mensajes.length === 0" class="text-center text-muted py-5">
+          <i class="bi bi-chat-dots fs-1 d-block mb-2 opacity-25"></i>
+          No hay mensajes todavía
+        </div>
+
+        <div *ngFor="let msg of mensajes" class="message-card p-3 mb-3 shadow-sm border animate__animated animate__fadeInUp">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <div class="message-icon-wrapper me-3">
+                <i class="bi bi-person-circle fs-4 text-secondary opacity-50"></i>
+              </div>
+              <div class="message-text">
+                {{ msg.texto }}
+              </div>
+            </div>
+
+            <div class="position-relative" *ngIf="esModerador()">
+              <div *ngIf="mensajePendienteEliminar === msg.id_mensaje" class="confirm-bubble shadow-sm animate__animated animate__zoomIn">
+                <i class="bi bi-check-lg text-success" (click)="confirmarEliminar(msg.id_mensaje)" style="cursor: pointer;"></i>
+                <div class="divider-v"></div>
+                <i class="bi bi-x-lg text-danger" (click)="mensajePendienteEliminar = null" style="cursor: pointer;"></i>
+              </div>
+
+              <button class="btn btn-sm text-danger border-0" (click)="mensajePendienteEliminar = msg.id_mensaje">
+                <i class="bi bi-trash icono-trash-grande"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="puedeEscribir()" class="input-fixed-bottom p-3 bg-white border-top">
+        <div class="input-group container shadow-sm rounded-pill border overflow-hidden bg-white">
+          <span class="input-group-text bg-white border-0 ps-3">
+            <i class="bi bi-person-circle text-secondary"></i>
+          </span>
+          <input type="text" class="form-control border-0 py-3" placeholder="Escribe algo en el tablón..." [(ngModel)]="nuevoMensaje" (keyup.enter)="enviarMensaje()"/>
+          <button class="btn btn-white border-0 pe-3 text-primary" (click)="enviarMensaje()" [disabled]="!nuevoMensaje.trim()">
+            <i class="bi bi-send-fill fs-5"></i>
           </button>
         </div>
       </div>
-    </div>
+    </ng-container>
 
-    <div class="chat-container flex-grow-1 mb-5">
-      <div *ngIf="mensajes.length === 0" class="text-center text-muted py-5">
-        <i class="bi bi-chat-dots fs-1 d-block mb-2 opacity-25"></i>
-        No hay mensajes todavía
-      </div>
-
-      <div *ngFor="let msg of mensajes" class="message-card p-3 mb-3 shadow-sm border animate__animated animate__fadeInUp">
-        <div class="d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center">
-            <div class="message-icon-wrapper me-3">
-              <i class="bi bi-person-circle fs-4 text-secondary opacity-50"></i>
+    <ng-container *ngIf="tabActiva === 'personas'">
+      <div class="animate__animated animate__fadeIn">
+        <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+          <h4 class="fw-bold mb-4 d-flex align-items-center">
+            <i class="bi bi-people me-2"></i> Integrantes de la clase
+          </h4>
+          
+          <div *ngFor="let u of usuariosClase" class="user-row d-flex align-items-center justify-content-between py-3 border-bottom">
+            <div class="d-flex align-items-center">
+              <div class="user-avatar me-3" [ngClass]="u.rol === 'profesor' ? 'bg-primary-light' : 'bg-gray-light'">
+                <i class="bi" [ngClass]="u.rol === 'profesor' ? 'bi-mortarboard-fill text-primary' : 'bi-person-fill text-secondary'"></i>
+              </div>
+              <div>
+                <div class="fw-bold">{{ u.nombre }}</div>
+                <div class="text-muted small">
+                  {{ u.correo_cifrado }} • <span class="badge text-uppercase font-monospace" [ngClass]="u.rol === 'profesor' ? 'text-primary' : 'text-secondary'">{{ u.rol }}</span>
+                </div>
+              </div>
             </div>
-            <div class="message-text">
-              {{ msg.texto }}
+
+            <div class="position-relative" *ngIf="esModerador() && u.id_user !== user?.id">
+              <div *ngIf="usuarioPendienteEliminar === u.id_user" class="confirm-bubble shadow-sm animate__animated animate__zoomIn">
+                <i class="bi bi-check-lg text-success" (click)="confirmarExpulsar(u.id_user)" style="cursor: pointer;"></i>
+                <div class="divider-v"></div>
+                <i class="bi bi-x-lg text-danger" (click)="usuarioPendienteEliminar = null" style="cursor: pointer;"></i>
+              </div>
+
+              <button class="btn btn-outline-danger btn-sm border-0 rounded-circle p-2" (click)="usuarioPendienteEliminar = u.id_user">
+                <i class="bi bi-person-x-fill fs-4"></i>
+              </button>
             </div>
           </div>
-
-          <div class="position-relative" *ngIf="esModerador()">
-            
-            <div *ngIf="mensajePendienteEliminar === msg.id_mensaje" class="confirm-bubble shadow-sm animate__animated animate__zoomIn">
-              <i class="bi bi-check-lg text-success" (click)="confirmarEliminar(msg.id_mensaje)" style="cursor: pointer;"></i>
-              <div class="divider-v"></div>
-              <i class="bi bi-x-lg text-danger" (click)="mensajePendienteEliminar = null" style="cursor: pointer;"></i>
-            </div>
-
-            <button class="btn btn-sm text-danger border-0"
-                    (click)="mensajePendienteEliminar = msg.id_mensaje">
-              <i class="bi bi-trash icono-trash-grande"></i>
-            </button>
-          </div>
-
         </div>
       </div>
-    </div>
-
-    <div *ngIf="puedeEscribir()" class="input-fixed-bottom p-3 bg-white border-top">
-      <div class="input-group container shadow-sm rounded-pill border overflow-hidden bg-white">
-        <span class="input-group-text bg-white border-0 ps-3">
-          <i class="bi bi-person-circle text-secondary"></i>
-        </span>
-        <input
-          type="text"
-          class="form-control border-0 py-3"
-          placeholder="Escribe algo en el tablón..."
-          [(ngModel)]="nuevoMensaje"
-          (keyup.enter)="enviarMensaje()"
-        />
-        <button class="btn btn-white border-0 pe-3 text-primary" 
-                (click)="enviarMensaje()"
-                [disabled]="!nuevoMensaje.trim()">
-          <i class="bi bi-send-fill fs-5"></i>
-        </button>
-      </div>
-    </div>
+    </ng-container>
 
   </div>
 </div>

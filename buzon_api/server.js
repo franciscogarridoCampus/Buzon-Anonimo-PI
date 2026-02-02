@@ -11,7 +11,7 @@ app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 
 // --- CLAVE SECRETA PARA JWT ---
-const SECRET_KEY = "mi_clave_secreta"; // ⚠️ En producción usar .env
+const SECRET_KEY = "mi_clave_secreta"; 
 
 // --- FUNCIONES PARA JWT ---
 function base64UrlEncode(data) {
@@ -36,7 +36,6 @@ function generarJWT(payload) {
     return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
-// 💡 Función para generar un código temporal de 6 caracteres
 function generarCodigoAleatorio() {
     const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let codigo = '';
@@ -50,7 +49,7 @@ function generarCodigoAleatorio() {
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '', // por defecto XAMPP
+    password: '', 
     database: 'buzon_anonimo'
 });
 
@@ -90,12 +89,11 @@ app.post('/api/login', (req, res) => {
         else if (data.es_profe) { rol = 'profesor'; nombre = data.nombre_profe; }
         else if (data.es_mod) { rol = 'moderador'; nombre = data.nombre_mod; }
 
-        // 🔑 Generar JWT dinámico
         const token = generarJWT({
             sub: data.id_user,
             nombre: nombre,
             rol: rol,
-            exp: Math.floor(Date.now() / 1000) + 3600 // expira en 1 hora
+            exp: Math.floor(Date.now() / 1000) + 3600 
         });
 
         res.json({
@@ -106,11 +104,16 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 2. REGISTRO
+// 2. REGISTRO (CON COMPROBACIÓN DE DUPLICADOS)
 app.post('/api/registro', (req, res) => {
     const { correo, pass, rol, nombre } = req.body;
     db.query('INSERT INTO USUARIO (correo_cifrado, contrasena_cifrado) VALUES (?, ?)', [correo, pass], (err, result) => {
-        if (err) return res.status(500).json({ success: false, error: 'El correo ya existe' });
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({ success: false, msg: 'Este correo ya está registrado' });
+            }
+            return res.status(500).json({ success: false, error: err.message });
+        }
 
         const newId = result.insertId;
         let sqlHijo = '';
@@ -185,10 +188,9 @@ app.get('/api/mensajes/:idClase', (req, res) => {
     });
 });
 
-// 7. ENVIAR MENSAJE (con filtro de malas palabras)
+// 7. ENVIAR MENSAJE
 app.post('/api/mensaje', (req, res) => {
     const { texto, id_autor, id_clase } = req.body;
-
     const textoMinus = texto.toLowerCase();
     const contieneMala = badwords.some(palabra => textoMinus.includes(palabra.toLowerCase()));
 
@@ -205,7 +207,7 @@ app.post('/api/mensaje', (req, res) => {
     });
 });
 
-// 8. OBTENER INFO BÁSICA DE LA CLASE
+// 8. INFO BÁSICA CLASE
 app.get('/api/clase/:idClase', (req, res) => {
     const { idClase } = req.params;
     const sql = 'SELECT id_clase, nombre, codigo_temp FROM CLASE WHERE id_clase = ?';
@@ -216,26 +218,22 @@ app.get('/api/clase/:idClase', (req, res) => {
     });
 });
 
-// 9. DELETE CLASE (mensajes incluidos)
+// 9. DELETE CLASE
 app.delete('/api/clase/:id_clase', (req, res) => {
     const { id_clase } = req.params;
-
-    // 1️⃣ Borrar mensajes asociados
     const sqlMensajes = 'DELETE FROM MENSAJE WHERE id_clase = ?';
     db.query(sqlMensajes, [id_clase], (err) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
-
-        // 2️⃣ Borrar clase
         const sqlClase = 'DELETE FROM CLASE WHERE id_clase = ?';
         db.query(sqlClase, [id_clase], (err2, result) => {
             if (err2) return res.status(500).json({ success: false, error: err2.message });
             if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: 'Clase no encontrada' });
-            res.json({ success: true, msg: `Clase ${id_clase} y sus mensajes eliminados con éxito` });
+            res.json({ success: true, msg: `Clase ${id_clase} y sus mensajes eliminados` });
         });
     });
 });
 
-// 10. ACTUALIZAR CÓDIGO TEMPORAL
+// 10. ACTUALIZAR CÓDIGO
 app.put('/api/clase/codigo/:id_clase', (req, res) => {
     const { id_clase } = req.params;
     const nuevoCodigo = generarCodigoAleatorio();
@@ -247,20 +245,63 @@ app.put('/api/clase/codigo/:id_clase', (req, res) => {
     });
 });
 
-// 11. ELIMINAR MENSAJE INDIVIDUAL (💡 NUEVA RUTA)
+// 11. ELIMINAR MENSAJE
 app.delete('/api/mensaje/:id_mensaje', (req, res) => {
     const { id_mensaje } = req.params;
-
     const sql = 'DELETE FROM MENSAJE WHERE id_mensaje = ?';
     db.query(sql, [id_mensaje], (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: 'Mensaje no encontrado' });
+        res.json({ success: true, msg: `Mensaje ${id_mensaje} eliminado` });
+    });
+});
 
-        res.json({ success: true, msg: `Mensaje ${id_mensaje} eliminado correctamente` });
+// 12. OBTENER USUARIOS DE UNA CLASE (Pestaña Personas)
+app.get('/api/clase-usuarios/:id_clase', (req, res) => {
+    const { id_clase } = req.params;
+    const sql = `
+        SELECT u.id_user, u.correo_cifrado, 
+               CASE 
+                   WHEN p.id_user IS NOT NULL THEN 'profesor'
+                   WHEN a.id_user IS NOT NULL THEN 'alumno'
+                   ELSE 'desconocido'
+               END as rol,
+               COALESCE(p.nombre, 'Alumno') as nombre
+        FROM ACCEDE ac
+        JOIN USUARIO u ON ac.id_user = u.id_user
+        LEFT JOIN PROFESOR p ON u.id_user = p.id_user
+        LEFT JOIN ALUMNO a ON u.id_user = a.id_user
+        WHERE ac.id_clase = ?
+    `;
+    db.query(sql, [id_clase], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+// 13. EXPULSAR USUARIO DE CLASE
+app.delete('/api/clase/:id_clase/usuario/:id_user', (req, res) => {
+    const { id_clase, id_user } = req.params;
+    const sql = 'DELETE FROM ACCEDE WHERE id_user = ? AND id_clase = ?';
+    db.query(sql, [id_user, id_clase], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, msg: 'Usuario expulsado' });
+    });
+});
+
+// 14. CAMBIAR CONTRASEÑA
+app.put('/api/usuario/password', (req, res) => {
+    const { id_user, nuevaPass } = req.body;
+    if (!id_user || !nuevaPass) return res.status(400).json({ success: false, msg: 'Datos incompletos' });
+
+    const sql = 'UPDATE USUARIO SET contrasena_cifrado = ? WHERE id_user = ?';
+    db.query(sql, [nuevaPass, id_user], (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true, msg: 'Contraseña actualizada correctamente' });
     });
 });
 
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
-    console.log('🚀 API corriendo en puerto 3000');
+    console.log(' API corriendo en puerto 3000');
 });

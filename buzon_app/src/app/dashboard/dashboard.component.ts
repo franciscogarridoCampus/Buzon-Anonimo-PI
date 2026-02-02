@@ -19,7 +19,17 @@ export class DashboardComponent implements OnInit {
 
   // UI CONTROL
   mostrarPerfil = false;
-  fabExpandido = false; // Variable para el botón flotante expansible
+  fabExpandido = false; 
+
+  // --- CAMBIO DE CONTRASEÑA ---
+  modalPass = false;
+  passNueva = '';
+  passConfirmar = '';
+  passError = '';
+  passSuccess = '';
+  passLoading = false;
+  verPass1 = false;
+  verPass2 = false;
 
   // CREAR CLASE
   nuevoNombre = '';
@@ -47,10 +57,13 @@ export class DashboardComponent implements OnInit {
   // COLORES POSIBLES PARA CLASES
   claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
 
-  // -------------------------------
   // VIÑETA ELIMINAR CLASE
-  // -------------------------------
   clasePendienteEliminar: number | null = null;
+
+  // --- NUEVO: PERSONALIZACIÓN DE IMAGEN ---
+  modalImagen = false;
+  imagenPreview: string | null = null;
+  claseSeleccionadaParaImagen: any = null;
 
   constructor(
     private claseService: ClaseService,
@@ -70,6 +83,55 @@ export class DashboardComponent implements OnInit {
   }
 
   // -------------------------------
+  // GESTIÓN DE CONTRASEÑA (AJUSTADO)
+  // -------------------------------
+  abrirModalPass() {
+    this.mostrarPerfil = false;
+    this.passNueva = '';
+    this.passConfirmar = '';
+    this.passError = '';
+    this.passSuccess = '';
+    this.verPass1 = false;
+    this.verPass2 = false;
+    this.modalPass = true;
+  }
+
+  cerrarModalPass() {
+    this.modalPass = false;
+  }
+
+  confirmarCambioPass() {
+    this.passError = '';
+    this.passSuccess = '';
+
+    const pass = this.passNueva.trim();
+    if (pass.length < 4) {
+      this.passError = 'La contraseña es demasiado corta (mín. 4)';
+      return;
+    }
+
+    if (this.passNueva !== this.passConfirmar) {
+      this.passError = 'Las contraseñas no coinciden';
+      return;
+    }
+
+    this.passLoading = true;
+    this.authService.cambiarPassword(this.user.id, this.passNueva).subscribe({
+      next: (res) => {
+        this.passLoading = false;
+        this.cerrarModalPass(); // Cierre instantáneo como en crear clase
+        this.cdr.detectChanges();
+        console.log('Contraseña actualizada con éxito');
+      },
+      error: (err) => {
+        this.passError = err.error?.msg || 'Error al actualizar la contraseña';
+        this.passLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // -------------------------------
   // GESTIÓN DE CLASES
   // -------------------------------
   cargarClases() {
@@ -84,6 +146,8 @@ export class DashboardComponent implements OnInit {
             clase.colorClase = color;
             localStorage.setItem(`clase-color-${clase.id_clase}`, color);
           }
+          // Recuperar imagen si existe
+          clase.imagenPortada = localStorage.getItem(`clase-img-${clase.id_clase}`);
           return clase;
         });
         this.cdr.detectChanges();
@@ -142,9 +206,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // -------------------------------
-  // ELIMINAR CLASE CON VIÑETA
-  // -------------------------------
   solicitarEliminarClase(idClase: number) {
     this.clasePendienteEliminar = idClase;
   }
@@ -157,6 +218,7 @@ export class DashboardComponent implements OnInit {
     this.claseService.eliminarClase(idClase).subscribe({
       next: () => {
         localStorage.removeItem(`clase-color-${idClase}`);
+        localStorage.removeItem(`clase-img-${idClase}`);
         this.clasePendienteEliminar = null;
         this.cargarClases();
       },
@@ -198,14 +260,14 @@ export class DashboardComponent implements OnInit {
         this.unirseError = '';
       },
       error: (err) => {
-        this.unirseError = err.error?.message || 'Código incorrecto o ya estás unido.';
+        this.unirseError = err.error?.msg || 'Código incorrecto o ya estás unido.';
         this.cdr.detectChanges();
       }
     });
   }
 
   // -------------------------------
-  // REGISTRO DE USUARIOS
+  // REGISTRO DE USUARIOS (AJUSTADO)
   // -------------------------------
   abrirModalRegistro() {
     this.limpiarRegistro();
@@ -259,16 +321,18 @@ export class DashboardComponent implements OnInit {
     this.authService.register(
       this.nuevoCorreo,
       this.nuevaContrasena,
-      this.nuevoCorreo,
+      this.nuevoCorreo, 
       this.nuevoRol
     ).subscribe({
       next: () => {
-        this.cerrarModalRegistro();
         this.registroLoading = false;
+        this.cerrarModalRegistro(); // Cierre instantáneo tras éxito
+        this.cdr.detectChanges();
       },
-      error: () => {
-        this.registroError = 'Error al registrar usuario';
+      error: (err) => {
+        this.registroError = err.error?.msg || 'Error al registrar usuario';
         this.registroLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -304,5 +368,41 @@ export class DashboardComponent implements OnInit {
   onDocumentClick(event: MouseEvent) {
     if (this.mostrarPerfil) this.mostrarPerfil = false;
     this.cdr.detectChanges();
+  }
+
+  // --- NUEVAS FUNCIONES PARA IMAGEN ---
+  abrirModalImagen(event: Event, clase: any) {
+    event.stopPropagation();
+    this.claseSeleccionadaParaImagen = clase;
+    this.imagenPreview = localStorage.getItem(`clase-img-${clase.id_clase}`);
+    this.modalImagen = true;
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagenPreview = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  guardarImagenClase() {
+    if (this.claseSeleccionadaParaImagen && this.imagenPreview) {
+      localStorage.setItem(`clase-img-${this.claseSeleccionadaParaImagen.id_clase}`, this.imagenPreview);
+      this.claseSeleccionadaParaImagen.imagenPortada = this.imagenPreview;
+      this.modalImagen = false;
+    }
+  }
+
+  borrarImagen() {
+    if (this.claseSeleccionadaParaImagen) {
+      localStorage.removeItem(`clase-img-${this.claseSeleccionadaParaImagen.id_clase}`);
+      this.claseSeleccionadaParaImagen.imagenPortada = null;
+      this.modalImagen = false;
+    }
   }
 }

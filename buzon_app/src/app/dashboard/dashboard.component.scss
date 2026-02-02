@@ -1,19 +1,25 @@
-/* ESTILO DE TARJETAS */
+/* ==========================================================================
+   ESTILO DE TARJETAS (NEOBRUTALISMO)
+   ========================================================================== */
 .clase-card {
   border-radius: 1.2rem;
-  overflow: visible; // Cambiado a visible para que la burbuja no se corte
+  overflow: visible; 
   cursor: pointer;
   transition: transform 0.2s;
   border: 2px solid #000;
   position: relative;
+  background: white;
   &:hover { transform: translateY(-4px); }
 }
 
 .clase-header {
-  border-radius: 1.1rem 1.1rem 0 0; // Ajuste para mantener la forma
-  min-height: 120px;
+  border-radius: 1.1rem 1.1rem 0 0;
+  min-height: 140px; // Un poco más alto para lucir la imagen
   color: white;
   border-bottom: 2px solid #000;
+  background-size: cover;
+  background-position: center;
+  position: relative;
 }
 
 .clase-footer {
@@ -23,11 +29,22 @@
   border-top: 1px solid #eee;
 }
 
+/* EFECTO PARA LEER TEXTO SOBRE IMÁGENES */
+.text-outline {
+  color: white;
+  text-shadow: 
+    -1.5px -1.5px 0 #000,  
+     1.5px -1.5px 0 #000,
+    -1.5px  1.5px 0 #000,
+     1.5px  1.5px 0 #000,
+     2px 2px 5px rgba(0,0,0,0.8);
+}
+
 /* BURBUJA DE CONFIRMACIÓN FUERA DE LA TARJETA */
 .confirm-bubble {
   position: absolute;
-  top: -10px; // La saca un poco hacia arriba
-  right: -10px; // La saca un poco hacia la derecha
+  top: -10px; 
+  right: -10px; 
   background: white;
   border: 2px solid #000;
   padding: 10px 15px;
@@ -35,10 +52,12 @@
   z-index: 100;
   display: flex;
   align-items: center;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
   
   i {
     font-size: 1.5rem;
     transition: transform 0.1s;
+    cursor: pointer;
     &:hover { transform: scale(1.2); }
   }
 
@@ -51,29 +70,40 @@
   }
 }
 
-/* PAPELERA */
-.btn-trash-custom {
-  background: rgba(0, 0, 0, 0.15);
-  border: none;
+/* BOTONES DE ACCIÓN EN TARJETA (LÁPIZ Y PAPELERA) */
+.btn-trash-custom, .btn-pencil-custom {
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   color: white;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-size: 1.45rem;
+  backdrop-filter: blur(4px);
 
   &:hover {
-    background: #ff4b2b; // Color más agresivo para eliminar
     color: white;
     transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
 }
 
-/* PERFIL ICONO */
+.btn-trash-custom {
+  font-size: 1.3rem;
+  &:hover { background: #ff4b2b; border-color: #000; }
+}
+
+.btn-pencil-custom {
+  font-size: 1.2rem;
+  &:hover { background: #004dc1; border-color: #000; }
+}
+
+/* ==========================================================================
+   PERFIL Y DROPDOWN
+   ========================================================================== */
 .perfil-icon {
   width: 48px;  
   height: 48px; 
@@ -82,19 +112,22 @@
   cursor: pointer;
   font-size: 1.8rem; 
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   &:hover { background: rgba(255,255,255,0.3); }
 }
 
-/* DROPDOWN */
 .perfil-dropdown {
-  top: 100%;
+  top: 110%;
   right: 0;
   background: white;
   border: 2px solid #000;
   border-radius: 10px;
   min-width: 260px;
   z-index: 1100;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.05);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  padding: 10px;
 }
 
 .perfil-email-text {
@@ -120,10 +153,14 @@
   border: none;
   border-radius: 6px;
   font-weight: bold;
+  padding: 8px;
+  transition: background 0.2s;
   &:hover { background: #333; }
 }
 
-/* FAB */
+/* ==========================================================================
+   FAB (BOTÓN FLOTANTE)
+   ========================================================================== */
 .fab-container {
   position: fixed;
   bottom: 2rem;
@@ -138,14 +175,15 @@
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .fab-option-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
 }
 
 .btn-fab-main {
@@ -154,38 +192,49 @@
   border-radius: 50%;
   background-color: #004dc1;
   color: white;
-  border: none;
+  border: 2px solid #000;
   font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  &.active { transform: rotate(0deg); background-color: #333; }
+  box-shadow: 4px 4px 0 #000;
+  transition: all 0.2s;
+  &.active { transform: rotate(45deg); background-color: #ff4b2b; }
+  &:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
 }
 
 .btn-fab-mini {
-  width: 45px;
-  height: 45px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 2px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
+  box-shadow: 3px 3px 0 #000;
+  transition: all 0.2s;
+  &:hover { transform: translateY(-2px); }
 }
 
 .fab-label {
   background: white;
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: bold;
-  border: 1px solid #000;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
 }
 
-/* MODALES */
+/* ==========================================================================
+   MODALES Y FORMULARIOS
+   ========================================================================== */
 .modal-custom-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -196,5 +245,40 @@
   background: white;
   border-radius: 15px;
   border: 2.5px solid #000;
-  max-width: 320px;
+  max-width: 400px;
+  width: 90%;
+  padding: 20px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+}
+
+.input-custom {
+  border: 2px solid #000;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 500;
+  width: 100%;
+  &:focus {
+    box-shadow: 3px 3px 0 #000;
+    outline: none;
+  }
+}
+
+.btn-primary-dark {
+  background: #004dc1;
+  color: white;
+  border: 2px solid #000;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: bold;
+  box-shadow: 4px 4px 0 #000;
+  transition: all 0.1s;
+  &:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+  &:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+/* SPINNER PARA LOADING */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
 }

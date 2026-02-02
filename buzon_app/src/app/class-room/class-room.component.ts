@@ -27,20 +27,27 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   idClase!: number;
   mensajes: Mensaje[] = [];
   nuevoMensaje = '';
-  errorMessage = '';
-
   claseNombre = 'Cargando...';
 
+  // --- ESTILOS VISUALES SINCRONIZADOS ---
+  bannerColor: string = 'bg-primary';
+  bannerImagen: string | null = null;
+
+  // Navegación
+  tabActiva: 'tablon' | 'personas' = 'tablon';
+  usuariosClase: any[] = [];
+
+  // Código Temporal
   codigoClase: string | null = null;
   mostrarCodigo = false;
   tiempoRestante = 0;
 
+  // Estados de eliminación
   mensajePendienteEliminar: number | null = null;
+  usuarioPendienteEliminar: number | null = null;
 
   private temporizador?: ReturnType<typeof setInterval>;
   private pollingSubscription?: Subscription;
-
-  private aliasMap = new Map<number, number>();
 
   constructor(
     private route: ActivatedRoute,
@@ -60,6 +67,10 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     this.user = JSON.parse(userStorage);
     this.idClase = Number(this.route.snapshot.paramMap.get('id'));
 
+    // RECUPERAR ESTILOS DEL DASHBOARD
+    this.bannerColor = localStorage.getItem(`clase-color-${this.idClase}`) || 'bg-primary';
+    this.bannerImagen = localStorage.getItem(`clase-img-${this.idClase}`);
+
     this.cargarInfoClase();
     this.cargarMensajes();
     this.iniciarActualizacionAutomatica();
@@ -68,6 +79,26 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.temporizador) clearInterval(this.temporizador);
     if (this.pollingSubscription) this.pollingSubscription.unsubscribe();
+  }
+
+  cambiarTab(tab: 'tablon' | 'personas') {
+    this.tabActiva = tab;
+    if (tab === 'personas') this.cargarUsuarios();
+  }
+
+  cargarUsuarios() {
+    this.claseService.fetchUsuariosClase(this.idClase).subscribe(users => {
+      this.usuariosClase = users;
+      this.cdr.detectChanges();
+    });
+  }
+
+  confirmarExpulsar(idUser: number) {
+    this.claseService.expulsarUsuario(this.idClase, idUser).subscribe(() => {
+      this.usuariosClase = this.usuariosClase.filter(u => u.id_user !== idUser);
+      this.usuarioPendienteEliminar = null;
+      this.cdr.detectChanges();
+    });
   }
 
   cargarInfoClase() {
@@ -82,13 +113,11 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
 
   generarNuevoCodigo() {
     if (!this.esModerador() && !this.esProfesor()) return;
-    if (this.temporizador) clearInterval(this.temporizador);
-    this.mostrarCodigo = true;
-    this.codigoClase = '...';
     this.claseService.generarCodigoTemporal(this.idClase).subscribe(res => {
       this.codigoClase = res.codigo_temp;
       const expiresAt = Math.floor(Date.now() / 1000) + 60;
       localStorage.setItem(`codigoClase_${this.idClase}`, JSON.stringify({ codigo: this.codigoClase, expiresAt }));
+      this.mostrarCodigo = true;
       this.activarTemporizador(expiresAt);
     });
   }
@@ -102,8 +131,6 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
       this.codigoClase = datos.codigo;
       this.mostrarCodigo = true;
       this.activarTemporizador(datos.expiresAt);
-    } else {
-      localStorage.removeItem(`codigoClase_${this.idClase}`);
     }
   }
 
@@ -124,30 +151,12 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     this.temporizador = setInterval(actualizar, 1000);
   }
 
-  solicitarEliminarMensaje(idMensaje: number) {
-    this.mensajePendienteEliminar = idMensaje;
-  }
-
-  cancelarEliminar() {
-    this.mensajePendienteEliminar = null;
-  }
-
   confirmarEliminar(idMensaje: number) {
     this.mensajeService.eliminarMensaje(idMensaje).subscribe(() => {
       this.mensajes = this.mensajes.filter(m => m.id_mensaje !== idMensaje);
       this.mensajePendienteEliminar = null;
       this.cdr.detectChanges();
     });
-  }
-
-  iniciarActualizacionAutomatica() {
-    this.pollingSubscription = interval(3000)
-      .pipe(switchMap(() => this.mensajeService.fetchMensajes(this.idClase)))
-      .subscribe(msgs => {
-        this.mensajes = msgs;
-        this.limpiarAliases(msgs);
-        this.cdr.detectChanges();
-      });
   }
 
   enviarMensaje() {
@@ -161,33 +170,21 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
   cargarMensajes() {
     this.mensajeService.fetchMensajes(this.idClase).subscribe(msgs => {
       this.mensajes = msgs;
-      this.limpiarAliases(msgs);
       this.cdr.detectChanges();
     });
   }
 
-  limpiarAliases(msgs: Mensaje[]) {
-    const autores = new Set(msgs.map(m => m.id_autor));
-    this.aliasMap.forEach((_, key) => {
-      if (!autores.has(key)) this.aliasMap.delete(key);
-    });
-  }
-
-  getAlias(idAutor: number): string {
-    if (!this.aliasMap.has(idAutor)) {
-      const usados = Array.from(this.aliasMap.values());
-      let n = 1;
-      while (usados.includes(n)) n++;
-      this.aliasMap.set(idAutor, n);
-    }
-    return `Anónimo ${this.aliasMap.get(idAutor)}`;
+  iniciarActualizacionAutomatica() {
+    this.pollingSubscription = interval(3000)
+      .pipe(switchMap(() => this.mensajeService.fetchMensajes(this.idClase)))
+      .subscribe(msgs => {
+        this.mensajes = msgs;
+        this.cdr.detectChanges();
+      });
   }
 
   esModerador() { return this.user?.rol === 'moderador'; }
   esProfesor() { return this.user?.rol === 'profesor'; }
   puedeEscribir() { return this.user?.rol === 'alumno'; }
-
-  volverDashboard() {
-    this.router.navigate(['/dashboard']);
-  }
+  volverDashboard() { this.router.navigate(['/dashboard']); }
 }

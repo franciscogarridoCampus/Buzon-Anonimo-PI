@@ -45,4 +45,14 @@ export class ClaseService {
     // El backend debe generar un nuevo código, actualizarlo en DB y devolverlo.
     return this.http.put<{ codigo_temp: string }>(`${this.baseUrl}/clase/codigo/${idClase}`, {});
   }
+  
+// Obtener integrantes de la clase
+fetchUsuariosClase(idClase: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.baseUrl}/clase-usuarios/${idClase}`);
+}
+
+// Expulsar usuario
+expulsarUsuario(idClase: number, idUser: number): Observable<any> {
+  return this.http.delete(`${this.baseUrl}/clase/${idClase}/usuario/${idUser}`);
+}
 }

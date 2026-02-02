@@ -1,97 +1,113 @@
-@use "sass:color";
-
-$primary-blue: #004dc1;
-
-.banner-clase {
-  background: linear-gradient(135deg, #0052cc 0%, #003d99 100%);
-  border-radius: 1.5rem;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.chat-container {
-  padding-bottom: 100px;
-}
-
-.message-card {
-  background: white;
-  border-radius: 1.2rem;
-  border: 1px solid #eef0f2 !important;
-  width: 100%;
-  transition: transform 0.2s;
-
-  &:hover {
-    background-color: #fcfcfc;
-  }
-}
-
-.message-icon-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.message-text {
-  color: #202124;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-/* ESTILO PARA LA VIÑETA SOBRE EL BOTÓN */
-.position-relative {
-  position: relative;
-}
-
+/* REUTILIZANDO TU ESTILO DE BURBUJAS */
 .confirm-bubble {
   position: absolute;
-  bottom: 120%; /* Aparece encima del botón */
+  bottom: 110%;
   right: 0;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 2rem;
-  padding: 6px 12px;
+  border: 2px solid #000;
+  border-radius: 50px;
+  padding: 6px 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   z-index: 100;
-  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 
   &::after {
     content: '';
     position: absolute;
     top: 100%;
-    right: 12px;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid white;
+    right: 15px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #000;
   }
 
   i {
-    font-size: 1.2rem;
-    &:hover { transform: scale(1.1); }
+    font-size: 1.3rem;
+    &:hover { transform: scale(1.2); }
   }
 
   .divider-v {
     width: 1px;
-    height: 14px;
-    background: #e0e0e0;
+    height: 18px;
+    background: #ddd;
   }
 }
 
-.icono-trash-grande {
-  font-size: 1.5rem;
+/* NAVEGACIÓN PESTAÑAS */
+.btn-tab {
+  border: none;
+  background: none;
+  font-weight: 700;
+  color: #666;
+  padding: 8px 4px;
+  position: relative;
+  transition: color 0.2s;
+
+  &class.active {
+    color: #004dc1;
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #004dc1;
+    }
+  }
 }
 
-/* INPUT ESTILO PILL */
+/* BANNER PERSONALIZADO */
+.banner-clase {
+  border-radius: 1.5rem;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  .text-outline {
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .shadow-text {
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* COLORES GRADIENTES (DEBEN COINCIDIR CON DASHBOARD) */
+.bg-primary { background: linear-gradient(135deg, #0052cc 0%, #003d99 100%) !important; }
+.bg-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important; }
+.bg-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important; }
+.bg-danger  { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%) !important; }
+.bg-info    { background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important; }
+
+/* PERSONAS */
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.bg-primary-light { background-color: #e7f0ff; }
+.bg-gray-light { background-color: #f8f9fa; }
+
+.message-card {
+  background: white;
+  border-radius: 1.2rem;
+  border: 1px solid #eef0f2 !important;
+  &:hover { background-color: #fcfcfc; }
+}
+
 .input-fixed-bottom {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 1000;
-}
-
-.input-group {
-  max-width: 800px;
-  margin: 0 auto;
-  input:focus { box-shadow: none; }
 }
