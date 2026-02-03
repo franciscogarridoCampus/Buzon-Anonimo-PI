@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const badwords = require('./badwords.js');
 const crypto = require('crypto'); // Para HMAC-SHA256
+const { enviarMensaje } = require('./mensajeService.js');
+
 const app = express();
 
 // --- CONFIGURACIÓN ---
@@ -104,14 +106,12 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 2. REGISTRO (CON COMPROBACIÓN DE DUPLICADOS)
+// 2. REGISTRO
 app.post('/api/registro', (req, res) => {
     const { correo, pass, rol, nombre } = req.body;
     db.query('INSERT INTO USUARIO (correo_cifrado, contrasena_cifrado) VALUES (?, ?)', [correo, pass], (err, result) => {
         if (err) {
-            if (err.code === 'ER_DUP_ENTRY') {
-                return res.status(400).json({ success: false, msg: 'Este correo ya está registrado' });
-            }
+            if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ success: false, msg: 'Este correo ya está registrado' });
             return res.status(500).json({ success: false, error: err.message });
         }
 
@@ -188,23 +188,18 @@ app.get('/api/mensajes/:idClase', (req, res) => {
     });
 });
 
-// 7. ENVIAR MENSAJE
-app.post('/api/mensaje', (req, res) => {
+// 7. ENVIAR MENSAJE (ahora delega en mensajeService.js)
+app.post('/api/mensaje', async (req, res) => {
     const { texto, id_autor, id_clase } = req.body;
-    const textoMinus = texto.toLowerCase();
-    const contieneMala = badwords.some(palabra => textoMinus.includes(palabra.toLowerCase()));
 
-    if (contieneMala) {
-        return res.status(400).json({ success: false, msg: 'El mensaje contiene palabras no permitidas' });
-    }
-
-    const fecha = new Date().toISOString().slice(0, 10);
-    const hora = new Date().toLocaleTimeString('es-ES', { hour12: false });
-    const sql = 'INSERT INTO MENSAJE (texto, fecha, hora_minuto, id_autor, id_clase) VALUES (?, ?, ?, ?, ?)';
-    db.query(sql, [texto, fecha, hora, id_autor, id_clase], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const resultado = await enviarMensaje(db, id_autor, id_clase, texto);
+        if (!resultado.success) return res.status(400).json(resultado);
         res.json({ success: true });
-    });
+    } catch (err) {
+        console.error('❌ Error enviando mensaje:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // 8. INFO BÁSICA CLASE
@@ -251,12 +246,12 @@ app.delete('/api/mensaje/:id_mensaje', (req, res) => {
     const sql = 'DELETE FROM MENSAJE WHERE id_mensaje = ?';
     db.query(sql, [id_mensaje], (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
-        if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: 'Mensaje no encontrado' });
+        if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: `Mensaje ${id_mensaje} no encontrado` });
         res.json({ success: true, msg: `Mensaje ${id_mensaje} eliminado` });
     });
 });
 
-// 12. OBTENER USUARIOS DE UNA CLASE (Pestaña Personas)
+// 12. OBTENER USUARIOS DE UNA CLASE
 app.get('/api/clase-usuarios/:id_clase', (req, res) => {
     const { id_clase } = req.params;
     const sql = `
@@ -303,5 +298,5 @@ app.put('/api/usuario/password', (req, res) => {
 
 // --- INICIAR SERVIDOR ---
 app.listen(3000, '0.0.0.0', () => {
-    console.log(' API corriendo en puerto 3000');
+    console.log('✅ API corriendo en puerto 3000');
 });
