@@ -162,17 +162,27 @@ app.post('/api/crear-clase', (req, res) => {
     );
 });
 
-// 5. UNIRSE A CLASE
+// 5. UNIRSE A CLASE (MODIFICADO PARA QUE ANGULAR DETECTE EL ERROR)
 app.post('/api/unirse-clase', (req, res) => {
     const { id_user, codigo } = req.body;
     db.query('SELECT id_clase FROM CLASE WHERE codigo_temp = ?', [codigo], (err, results) => {
-        if (results.length === 0) return res.json({ success: false, msg: 'Código incorrecto' });
+        if (err) return res.status(500).json({ success: false, error: err.message });
+
+        // Si el código no existe, enviamos status 400 (Error)
+        if (results.length === 0) {
+            return res.status(400).json({ success: false, msg: 'El código no es válido o ha expirado' });
+        }
+
         const id_clase = results[0].id_clase;
         db.query('INSERT INTO ACCEDE (id_user, id_clase) VALUES (?, ?)', [id_user, id_clase], (err) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') return res.json({ success: false, msg: 'Ya estás unido a esta clase' });
+                // Si ya está unido (duplicado), enviamos status 400
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({ success: false, msg: 'Ya estás unido a esta clase' });
+                }
                 return res.status(500).json({ success: false, error: err.message });
             }
+            // Solo si todo está bien, enviamos el éxito (esto activará el 'next' en Angular)
             res.json({ success: true });
         });
     });
@@ -228,15 +238,32 @@ app.delete('/api/clase/:id_clase', (req, res) => {
     });
 });
 
-// 10. ACTUALIZAR CÓDIGO
+// 10. ACTUALIZAR CÓDIGO (ROTACIÓN AUTOMÁTICA CADA 60 SEG)
 app.put('/api/clase/codigo/:id_clase', (req, res) => {
     const { id_clase } = req.params;
-    const nuevoCodigo = generarCodigoAleatorio();
-    const sql = 'UPDATE CLASE SET codigo_temp = ? WHERE id_clase = ?';
-    db.query(sql, [nuevoCodigo, id_clase], (err, result) => {
+    
+    // Función interna para actualizar y programar el siguiente cambio
+    const rotarCodigo = (id) => {
+        const nuevoCodigo = generarCodigoAleatorio();
+        db.query('UPDATE CLASE SET codigo_temp = ? WHERE id_clase = ?', [nuevoCodigo, id], (err) => {
+            if (err) console.error("Error rotando código:", err);
+            else console.log(`🔄 Código rotado automáticamente a ${nuevoCodigo} para clase ${id}`);
+        });
+    };
+
+    // 1. Generamos el código que el profesor va a ver AHORA
+    const codigoActual = generarCodigoAleatorio();
+    
+    db.query('UPDATE CLASE SET codigo_temp = ? WHERE id_clase = ?', [codigoActual, id_clase], (err) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
-        if (result.affectedRows === 0) return res.status(404).json({ success: false, msg: 'Clase no encontrada' });
-        res.json({ success: true, codigo_temp: nuevoCodigo });
+
+        // 2. Programamos que a los 60 segundos cambie a OTRO código distinto
+        // Así el código que el profesor tiene en pantalla dejará de funcionar
+        setTimeout(() => {
+            rotarCodigo(id_clase);
+        }, 60000); 
+
+        res.json({ success: true, codigo_temp: codigoActual });
     });
 });
 

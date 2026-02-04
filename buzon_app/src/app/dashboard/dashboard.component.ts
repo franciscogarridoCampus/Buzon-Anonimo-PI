@@ -49,6 +49,7 @@ export class DashboardComponent implements OnInit {
   modalUnirseClase = false;
   codigoUnirse = '';
   unirseError = '';
+  unirseLoading = false; // Añadido para feedback visual
 
   // MOSTRAR/OCULTAR CONTRASEÑA
   mostrarContrasena = false;
@@ -83,7 +84,7 @@ export class DashboardComponent implements OnInit {
   }
 
   // -------------------------------
-  // GESTIÓN DE CONTRASEÑA (AJUSTADO)
+  // GESTIÓN DE CONTRASEÑA
   // -------------------------------
   abrirModalPass() {
     this.mostrarPerfil = false;
@@ -119,9 +120,8 @@ export class DashboardComponent implements OnInit {
     this.authService.cambiarPassword(this.user.id, this.passNueva).subscribe({
       next: (res) => {
         this.passLoading = false;
-        this.cerrarModalPass(); // Cierre instantáneo como en crear clase
+        this.cerrarModalPass();
         this.cdr.detectChanges();
-        console.log('Contraseña actualizada con éxito');
       },
       error: (err) => {
         this.passError = err.error?.msg || 'Error al actualizar la contraseña';
@@ -146,7 +146,6 @@ export class DashboardComponent implements OnInit {
             clase.colorClase = color;
             localStorage.setItem(`clase-color-${clase.id_clase}`, color);
           }
-          // Recuperar imagen si existe
           clase.imagenPortada = localStorage.getItem(`clase-img-${clase.id_clase}`);
           return clase;
         });
@@ -234,11 +233,12 @@ export class DashboardComponent implements OnInit {
   }
 
   // -------------------------------
-  // UNIRSE A CLASE
+  // UNIRSE A CLASE (AJUSTADO)
   // -------------------------------
   abrirModalUnirse() {
     this.codigoUnirse = '';
     this.unirseError = '';
+    this.unirseLoading = false;
     this.modalUnirseClase = true;
   }
 
@@ -246,28 +246,35 @@ export class DashboardComponent implements OnInit {
     this.modalUnirseClase = false;
     this.codigoUnirse = '';
     this.unirseError = '';
+    this.unirseLoading = false;
   }
 
   confirmarUnirseClase() {
     const codigo = this.codigoUnirse.trim();
     if (!codigo) return;
 
+    this.unirseError = '';
+    this.unirseLoading = true;
+
     this.claseService.unirseClase(this.user.id, codigo).subscribe({
       next: (res) => {
-        this.modalUnirseClase = false;
+        // ÉXITO: Limpiamos, cerramos y recargamos
+        this.unirseLoading = false;
+        this.cerrarModalUnirse();
         this.cargarClases();
-        this.codigoUnirse = '';
-        this.unirseError = '';
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.unirseError = err.error?.msg || 'Código incorrecto o ya estás unido.';
+        // ERROR: No cerramos el modal, solo mostramos el aviso
+        this.unirseLoading = false;
+        this.unirseError = err.error?.msg || 'El código no es válido o ha expirado';
         this.cdr.detectChanges();
       }
     });
   }
 
   // -------------------------------
-  // REGISTRO DE USUARIOS (AJUSTADO)
+  // REGISTRO DE USUARIOS
   // -------------------------------
   abrirModalRegistro() {
     this.limpiarRegistro();
@@ -301,7 +308,14 @@ export class DashboardComponent implements OnInit {
   registrarUsuario() {
     this.registroError = '';
 
-    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
+    const permitido = [
+  '@campuscamara.es',
+  '@camaradesevilla.es',
+  '@eusa.es',
+  '@fpcampuscamara.es',
+  '@campuscamaraformacion.com',
+  '@campuscamarasevilla.com'
+];
     if (!permitido.some(d => this.nuevoCorreo.endsWith(d))) {
       this.registroError = `Correo inválido (${permitido.join(' o ')})`;
       return;
@@ -326,7 +340,7 @@ export class DashboardComponent implements OnInit {
     ).subscribe({
       next: () => {
         this.registroLoading = false;
-        this.cerrarModalRegistro(); // Cierre instantáneo tras éxito
+        this.cerrarModalRegistro();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -370,7 +384,7 @@ export class DashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // --- NUEVAS FUNCIONES PARA IMAGEN ---
+  // --- IMAGEN ---
   abrirModalImagen(event: Event, clase: any) {
     event.stopPropagation();
     this.claseSeleccionadaParaImagen = clase;

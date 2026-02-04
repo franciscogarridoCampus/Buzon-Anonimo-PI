@@ -26,6 +26,16 @@ export class LoginComponent {
   registroError = '';
   registroLoading = false;
 
+  // Dominios permitidos centralizados para facilitar el mensaje
+  private dominios = [
+    '@campuscamara.es',
+    '@camaradesevilla.es',
+    '@eusa.es',
+    '@fpcampuscamara.es',
+    '@campuscamaraformacion.com',
+    '@campuscamarasevilla.com'
+  ];
+
   constructor(private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -34,9 +44,8 @@ export class LoginComponent {
   login() {
     this.errorMessage = '';
 
-    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
-    if (!permitido.some(d => this.correo.trim().endsWith(d))) {
-      this.errorMessage = `Solo se permiten correos de ${permitido.join(' o ')}`;
+    if (!this.dominios.some(d => this.correo.trim().toLowerCase().endsWith(d))) {
+      this.errorMessage = `Dominio no permitido. Use: ${this.dominios.join(', ')}`;
       return;
     }
 
@@ -48,9 +57,14 @@ export class LoginComponent {
         this.router.navigate(['/dashboard']);
         this.loading = false;
       },
-      error: () => {
-        this.errorMessage = 'Credenciales incorrectas o error de conexión';
+      error: (err) => {
+        if (err.error && err.error.msg) {
+          this.errorMessage = err.error.msg;
+        } else {
+          this.errorMessage = 'Credenciales incorrectas o error de conexión';
+        }
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -70,11 +84,12 @@ export class LoginComponent {
 
   registrar() {
     this.registroError = '';
-    const permitido = ['@campuscamara.es', '@camaradesevilla.com'];
-    if (!this.nuevoCorreo.trim() || !permitido.some(d => this.nuevoCorreo.endsWith(d))) {
-      this.registroError = `Correo inválido (${permitido.join(' o ')})`;
+    
+    if (!this.nuevoCorreo.trim() || !this.dominios.some(d => this.nuevoCorreo.toLowerCase().endsWith(d))) {
+      this.registroError = `Use un correo de: ${this.dominios.join(', ')}`;
       return;
     }
+    
     if (!this.nuevaContrasena.trim()) {
       this.registroError = 'Contraseña vacía';
       return;
@@ -92,8 +107,8 @@ export class LoginComponent {
           this.registroLoading = false;
           this.cdr.detectChanges();
         },
-        error: () => {
-          this.registroError = 'Error al registrar usuario';
+        error: (err) => {
+          this.registroError = err.error?.msg || 'Error al registrar usuario';
           this.registroLoading = false;
           this.cdr.detectChanges();
         }
