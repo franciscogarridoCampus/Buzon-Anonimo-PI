@@ -1,7 +1,10 @@
+// Imports de Angular
 import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+// Servicios
 import { ClaseService } from '../services/clase.service';
 import { AuthService } from '../services/auth.service';
 
@@ -14,14 +17,15 @@ import { AuthService } from '../services/auth.service';
 })
 export class DashboardComponent implements OnInit {
 
+  // Usuario y listado de clases
   user: any;
   clases: any[] = [];
 
-  // UI CONTROL
+  // Control visual general
   mostrarPerfil = false;
   fabExpandido = false; 
 
-  // --- CAMBIO DE CONTRASEÑA ---
+  // Cambio de contraseña
   modalPass = false;
   passNueva = '';
   passConfirmar = '';
@@ -31,12 +35,12 @@ export class DashboardComponent implements OnInit {
   verPass1 = false;
   verPass2 = false;
 
-  // CREAR CLASE
+  // Crear clase
   nuevoNombre = '';
   modalCrearClase = false;
   errorMessage = '';
 
-  // REGISTRO USUARIO
+  // Registro de usuarios
   modalRegistro = false;
   nuevoCorreo = '';
   nuevaContrasena = '';
@@ -45,23 +49,23 @@ export class DashboardComponent implements OnInit {
   registroError = '';
   registroLoading = false;
 
-  // MODAL UNIRSE A CLASE
+  // Unirse a una clase por código
   modalUnirseClase = false;
   codigoUnirse = '';
   unirseError = '';
-  unirseLoading = false; // Añadido para feedback visual
+  unirseLoading = false;
 
-  // MOSTRAR/OCULTAR CONTRASEÑA
+  // Mostrar u ocultar contraseñas
   mostrarContrasena = false;
   mostrarContrasenaConfirm = false;
 
-  // COLORES POSIBLES PARA CLASES
+  // Colores disponibles para las clases
   claseColors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
 
-  // VIÑETA ELIMINAR CLASE
+  // Control de eliminación de clase
   clasePendienteEliminar: number | null = null;
 
-  // --- NUEVO: PERSONALIZACIÓN DE IMAGEN ---
+  // Personalización de imagen de la clase
   modalImagen = false;
   imagenPreview: string | null = null;
   claseSeleccionadaParaImagen: any = null;
@@ -73,6 +77,7 @@ export class DashboardComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
+  // Se ejecuta al entrar al dashboard
   ngOnInit(): void {
     const userStorage = localStorage.getItem('user');
     if (!userStorage) {
@@ -83,9 +88,11 @@ export class DashboardComponent implements OnInit {
     this.cargarClases();
   }
 
-  // -------------------------------
+  // ===============================
   // GESTIÓN DE CONTRASEÑA
-  // -------------------------------
+  // ===============================
+
+  // Abre el modal de cambio de contraseña
   abrirModalPass() {
     this.mostrarPerfil = false;
     this.passNueva = '';
@@ -97,10 +104,12 @@ export class DashboardComponent implements OnInit {
     this.modalPass = true;
   }
 
+  // Cierra el modal de contraseña
   cerrarModalPass() {
     this.modalPass = false;
   }
 
+  // Valida y envía el cambio de contraseña
   confirmarCambioPass() {
     this.passError = '';
     this.passSuccess = '';
@@ -131,9 +140,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // -------------------------------
+  // ===============================
   // GESTIÓN DE CLASES
-  // -------------------------------
+  // ===============================
+
+  // Carga las clases del usuario
   cargarClases() {
     this.claseService.fetchClases(this.user.id, this.user.rol).subscribe({
       next: (clases: any[]) => {
@@ -157,6 +168,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Abre el modal para crear una clase
   abrirModalCrearClase() {
     this.nuevoNombre = '';
     this.errorMessage = '';
@@ -164,10 +176,12 @@ export class DashboardComponent implements OnInit {
     this.fabExpandido = false; 
   }
 
+  // Cierra el modal de crear clase
   cerrarModalCrearClase() {
     this.modalCrearClase = false;
   }
 
+  // Genera un código aleatorio para la clase
   generarCodigoAleatorio(length = 6): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -177,6 +191,7 @@ export class DashboardComponent implements OnInit {
     return result;
   }
 
+  // Crea una nueva clase
   crearClase() {
     const nombreLimpio = this.nuevoNombre.trim();
     this.errorMessage = '';
@@ -205,14 +220,17 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Solicita confirmación para eliminar clase
   solicitarEliminarClase(idClase: number) {
     this.clasePendienteEliminar = idClase;
   }
 
+  // Cancela la eliminación
   cancelarEliminarClase() {
     this.clasePendienteEliminar = null;
   }
 
+  // Elimina definitivamente la clase
   confirmarEliminarClase(idClase: number) {
     this.claseService.eliminarClase(idClase).subscribe({
       next: () => {
@@ -228,13 +246,16 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Entra a una clase seleccionada
   entrarClase(clase: any) {
     this.router.navigate(['/class-room', clase.id_clase]);
   }
 
-  // -------------------------------
-  // UNIRSE A CLASE (AJUSTADO)
-  // -------------------------------
+  // ===============================
+  // UNIRSE A CLASE
+  // ===============================
+
+  // Abre el modal para unirse a una clase
   abrirModalUnirse() {
     this.codigoUnirse = '';
     this.unirseError = '';
@@ -242,6 +263,7 @@ export class DashboardComponent implements OnInit {
     this.modalUnirseClase = true;
   }
 
+  // Cierra el modal de unirse
   cerrarModalUnirse() {
     this.modalUnirseClase = false;
     this.codigoUnirse = '';
@@ -249,6 +271,7 @@ export class DashboardComponent implements OnInit {
     this.unirseLoading = false;
   }
 
+  // Envía el código para unirse a una clase
   confirmarUnirseClase() {
     const codigo = this.codigoUnirse.trim();
     if (!codigo) return;
@@ -258,14 +281,12 @@ export class DashboardComponent implements OnInit {
 
     this.claseService.unirseClase(this.user.id, codigo).subscribe({
       next: (res) => {
-        // ÉXITO: Limpiamos, cerramos y recargamos
         this.unirseLoading = false;
         this.cerrarModalUnirse();
         this.cargarClases();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        // ERROR: No cerramos el modal, solo mostramos el aviso
         this.unirseLoading = false;
         this.unirseError = err.error?.msg || 'El código no es válido o ha expirado';
         this.cdr.detectChanges();
@@ -273,19 +294,23 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // -------------------------------
+  // ===============================
   // REGISTRO DE USUARIOS
-  // -------------------------------
+  // ===============================
+
+  // Abre el modal de registro
   abrirModalRegistro() {
     this.limpiarRegistro();
     this.modalRegistro = true;
     this.fabExpandido = false; 
   }
 
+  // Cierra el modal de registro
   cerrarModalRegistro() {
     this.modalRegistro = false;
   }
 
+  // Limpia los campos del registro
   limpiarRegistro() {
     this.nuevoCorreo = '';
     this.nuevaContrasena = '';
@@ -297,25 +322,29 @@ export class DashboardComponent implements OnInit {
     this.mostrarContrasenaConfirm = false;
   }
 
+  // Muestra u oculta contraseña
   toggleMostrarContrasena() {
     this.mostrarContrasena = !this.mostrarContrasena;
   }
 
+  // Muestra u oculta confirmar contraseña
   toggleMostrarContrasenaConfirm() {
     this.mostrarContrasenaConfirm = !this.mostrarContrasenaConfirm;
   }
 
+  // Registra un nuevo usuario
   registrarUsuario() {
     this.registroError = '';
 
     const permitido = [
-  '@campuscamara.es',
-  '@camaradesevilla.es',
-  '@eusa.es',
-  '@fpcampuscamara.es',
-  '@campuscamaraformacion.com',
-  '@campuscamarasevilla.com'
-];
+      '@campuscamara.es',
+      '@camaradesevilla.es',
+      '@eusa.es',
+      '@fpcampuscamara.es',
+      '@campuscamaraformacion.com',
+      '@campuscamarasevilla.com'
+    ];
+
     if (!permitido.some(d => this.nuevoCorreo.endsWith(d))) {
       this.registroError = `Correo inválido (${permitido.join(' o ')})`;
       return;
@@ -351,14 +380,17 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // -------------------------------
+  // ===============================
   // PERFIL Y SESIÓN
-  // -------------------------------
+  // ===============================
+
+  // Muestra u oculta el menú de perfil
   togglePerfil(event: Event) {
     event.stopPropagation();
     this.mostrarPerfil = !this.mostrarPerfil;
   }
 
+  // Devuelve el rol con nombre legible
   getRolFormateado(): string {
     const roles: { [key: string]: string } = {
       'moderador': 'Moderador',
@@ -368,23 +400,30 @@ export class DashboardComponent implements OnInit {
     return roles[this.user.rol] || this.user.rol;
   }
 
+  // Cierra sesión
   logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
 
+  // Comprueba si el usuario es moderador
   esModerador(): boolean {
     return this.user?.rol === 'moderador';
   }
 
+  // Cierra el menú de perfil al hacer click fuera
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (this.mostrarPerfil) this.mostrarPerfil = false;
     this.cdr.detectChanges();
   }
 
-  // --- IMAGEN ---
+  // ===============================
+  // IMAGEN DE CLASE
+  // ===============================
+
+  // Abre el modal para cambiar imagen
   abrirModalImagen(event: Event, clase: any) {
     event.stopPropagation();
     this.claseSeleccionadaParaImagen = clase;
@@ -392,6 +431,7 @@ export class DashboardComponent implements OnInit {
     this.modalImagen = true;
   }
 
+  // Previsualiza la imagen seleccionada
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -404,6 +444,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // Guarda la imagen de la clase
   guardarImagenClase() {
     if (this.claseSeleccionadaParaImagen && this.imagenPreview) {
       localStorage.setItem(`clase-img-${this.claseSeleccionadaParaImagen.id_clase}`, this.imagenPreview);
@@ -412,6 +453,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // Borra la imagen de la clase
   borrarImagen() {
     if (this.claseSeleccionadaParaImagen) {
       localStorage.removeItem(`clase-img-${this.claseSeleccionadaParaImagen.id_clase}`);

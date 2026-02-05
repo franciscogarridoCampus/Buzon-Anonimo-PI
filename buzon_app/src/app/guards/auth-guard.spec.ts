@@ -1,17 +1,42 @@
 import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
-
-import { AuthGuard } from '../auth.guard';
+import { Router } from '@angular/router';
+// Usamos el punto para que el editor no se queje
+import { AuthGuard } from './auth-guard';
 
 describe('AuthGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) =>
-    TestBed.runInInjectionContext(() => AuthGuard(...guardParameters));
+  let guard: AuthGuard;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [
+        AuthGuard,
+        // Creamos un "Router de mentira" simple para que el test no explote
+        { provide: Router, useValue: { parseUrl: (url: string) => url } }
+      ]
+    });
+    
+    // Sacamos el guard del sistema de Angular
+    guard = TestBed.inject(AuthGuard);
   });
 
-  it('should be created', () => {
-    expect(executeGuard).toBeTruthy();
+  // Test 1: Verificar que el Guard existe
+  it('debe crearse correctamente', () => {
+    expect(guard).toBeTruthy();
+  });
+
+  // Test 2: Probar tu lógica de login (sin spies complicados)
+  it('debe devolver true si hay token y usuario', () => {
+    // 1. Preparamos el terreno manualmente
+    localStorage.setItem('token', 'mi-token');
+    localStorage.setItem('user', 'mi-usuario');
+
+    // 2. Ejecutamos TU función del guard
+    const resultado = guard.canActivate();
+
+    // 3. Verificamos que sea true
+   expect(resultado).toBe(true);
+
+    // Limpiamos al terminar para no ensuciar otros tests
+    localStorage.clear();
   });
 });
