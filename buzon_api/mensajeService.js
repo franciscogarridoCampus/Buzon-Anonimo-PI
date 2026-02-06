@@ -6,8 +6,8 @@ const badwords = require('./badwords.js');
 // CONFIGURACIÓN DE CORREO
 // ------------------------
 // Correo y contraseña de aplicación para enviar notificaciones
-const EMAIL_USER = 'cgarridoribeiro@gmail.com'; // usuario del correo
-const EMAIL_PASS = 'ktnwxxgjcpkshrfx';         // contraseña de aplicación
+const EMAIL_USER = ''; // usuario del correo
+const EMAIL_PASS = '';         // contraseña de aplicación
 
 let transporter = null;
 
