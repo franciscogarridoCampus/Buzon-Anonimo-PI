@@ -1,7 +1,3 @@
-BUZÓN ANÓNIMO
-
-Aplicación web que permite la interacción anónima entre alumnos, profesores y moderadores en clases virtuales.
-
 # BUZÓN ANÓNIMO
 
 Aplicación web para compartir mensajes anónimos entre alumnos, profesores y moderadores dentro de clases.
