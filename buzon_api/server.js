@@ -14,6 +14,14 @@ const app = express();
 app.use(cors({ origin: '*' })); // Permite solicitudes desde cualquier origen
 app.use(bodyParser.json());     // Permite recibir JSON en los cuerpos de las peticiones
 
+// Montar routers MVC
+const authRouter = require('./routes/authRoutes');
+const claseRouter = require('./routes/claseRoutes');
+const mensajeRouter = require('./routes/mensajeRoutes');
+app.use('/api', authRouter);
+app.use('/api', claseRouter);
+app.use('/api/mensaje', mensajeRouter);
+
 // ------------------------
 // CLAVE SECRETA PARA JWT
 // ------------------------
@@ -74,99 +82,16 @@ db.connect(err => {
     console.log('Base de datos conectada correctamente.');
 });
 
+// Exponer la conexión DB en la app para que controllers la usen
+app.set('db', db);
+
 // =========================
 // RUTAS DEL SERVIDOR
 // =========================
 
-// 1. LOGIN
-app.post('/api/login', (req, res) => {
-    const { correo, pass } = req.body;
-    const sql = `
-        SELECT u.id_user, u.correo_cifrado, 
-               a.id_user AS es_alumno, 
-               p.id_user AS es_profe, p.nombre AS nombre_profe,
-               m.id_user AS es_mod, m.nombre AS nombre_mod
-        FROM USUARIO u
-        LEFT JOIN ALUMNO a ON u.id_user = a.id_user
-        LEFT JOIN PROFESOR p ON u.id_user = p.id_user
-        LEFT JOIN MODERADOR m ON u.id_user = m.id_user
-        WHERE u.correo_cifrado = ? AND u.contrasena_cifrado = ?
-    `;
-    db.query(sql, [correo, pass], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(401).json({ success: false, msg: 'Credenciales inválidas' });
+// Auth routes migrated to authRoutes (controllers/authController)
 
-        const data = results[0];
-        let rol = 'desconocido';
-        let nombre = 'Anónimo';
-
-        if (data.es_alumno) rol = 'alumno';
-        else if (data.es_profe) { rol = 'profesor'; nombre = data.nombre_profe; }
-        else if (data.es_mod) { rol = 'moderador'; nombre = data.nombre_mod; }
-
-        const token = generarJWT({
-            sub: data.id_user,
-            nombre: nombre,
-            rol: rol,
-            exp: Math.floor(Date.now() / 1000) + 3600 // Expira en 1 hora
-        });
-
-        res.json({
-            success: true,
-            user: { id: data.id_user, correo: data.correo_cifrado, rol: rol, nombre: nombre },
-            token: token
-        });
-    });
-});
-
-// 2. REGISTRO DE USUARIOS
-app.post('/api/registro', (req, res) => {
-    const { correo, pass, rol, nombre } = req.body;
-
-    // Inserta en la tabla principal de usuarios
-    db.query('INSERT INTO USUARIO (correo_cifrado, contrasena_cifrado) VALUES (?, ?)', [correo, pass], (err, result) => {
-        if (err) {
-            if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ success: false, msg: 'Este correo ya está registrado' });
-            return res.status(500).json({ success: false, error: err.message });
-        }
-
-        const newId = result.insertId;
-        let sqlHijo = '';
-        let paramsHijo = [];
-
-        // Inserta en la tabla específica según el rol
-        if (rol === 'alumno') {
-            sqlHijo = 'INSERT INTO ALUMNO (id_user) VALUES (?)';
-            paramsHijo = [newId];
-        } else if (rol === 'profesor') {
-            sqlHijo = 'INSERT INTO PROFESOR (id_user, nombre) VALUES (?, ?)';
-            paramsHijo = [newId, nombre];
-        } else if (rol === 'moderador') {
-            sqlHijo = 'INSERT INTO MODERADOR (id_user, nombre) VALUES (?, ?)';
-            paramsHijo = [newId, nombre];
-        }
-
-        db.query(sqlHijo, paramsHijo, (errHijo) => {
-            if (errHijo) return res.status(500).json({ error: errHijo.message });
-            res.json({ success: true, id: newId });
-        });
-    });
-});
-
-// 3. OBTENER CLASES DE UN USUARIO
-app.get('/api/clases/:id/:rol', (req, res) => {
-    const { id, rol } = req.params;
-    let sql = '';
-
-    // Si es moderador, muestra clases creadas; si no, clases a las que accede
-    if (rol === 'moderador') sql = 'SELECT * FROM CLASE WHERE id_creador = ?';
-    else sql = 'SELECT c.* FROM CLASE c JOIN ACCEDE a ON c.id_clase = a.id_clase WHERE a.id_user = ?';
-
-    db.query(sql, [id], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
-});
+// Clase routes migrated to claseRoutes (controllers/claseController)
 
 // 4. CREAR CLASE NUEVA
 app.post('/api/crear-clase', (req, res) => {
@@ -205,29 +130,9 @@ app.post('/api/unirse-clase', (req, res) => {
     });
 });
 
-// 6. OBTENER MENSAJES DE UNA CLASE
-app.get('/api/mensajes/:idClase', (req, res) => {
-    const { idClase } = req.params;
-    const sql = 'SELECT * FROM MENSAJE WHERE id_clase = ? ORDER BY id_mensaje DESC';
-    db.query(sql, [idClase], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
-});
+// Mensajes listing moved to claseRoutes/mensajeRoutes
 
-// 7. ENVIAR MENSAJE (delegado a mensajeService.js)
-app.post('/api/mensaje', async (req, res) => {
-    const { texto, id_autor, id_clase } = req.body;
-
-    try {
-        const resultado = await enviarMensaje(db, id_autor, id_clase, texto);
-        if (!resultado.success) return res.status(400).json(resultado);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error enviando mensaje:', err);
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
+// Mensaje POST routed via /api/mensaje (routes/mensajeRoutes)
 
 // 8. OBTENER INFORMACIÓN BÁSICA DE UNA CLASE
 app.get('/api/clase/:idClase', (req, res) => {
