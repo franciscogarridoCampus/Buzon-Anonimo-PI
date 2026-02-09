@@ -140,7 +140,3 @@ Si vas a modificar la API o la estructura, sigue estos pasos mínimos:
 ## 9) Licencia y otros
 
 Incluye aquí la licencia si procede. Por defecto no se incluye ninguna en este repo.
-
----
-Si quieres, puedo agregar un `README.dev.md` con instrucciones de desarrollo más detalladas (scripts, tests, cómo añadir recursos al MVC). ¿Quieres que lo añada? 
-
