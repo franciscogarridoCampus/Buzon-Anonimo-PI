@@ -1,11 +1,5 @@
 const claseService = require('../services/claseService');
-
-function generarCodigoAleatorio() {
-    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let codigo = '';
-    for (let i = 0; i < 6; i++) codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-    return codigo;
-}
+const { generarCodigoAleatorio } = require('../services/utilsService');
 
 async function getClases(req, res) {
     const { id, rol } = req.params;
@@ -77,4 +71,12 @@ async function expulsarUsuario(req, res) {
     } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-module.exports = { getClases, crearClase, unirseClase, getMensajesClase, getClaseInfo, eliminarClase, rotarCodigo, expulsarUsuario };
+async function getClaseUsuarios(req, res) {
+    const { id_clase } = req.params;
+    try {
+        const usuarios = await claseService.getClaseUsuarios(req.app.get('db'), id_clase);
+        res.json(usuarios);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+module.exports = { getClases, crearClase, unirseClase, getMensajesClase, getClaseInfo, eliminarClase, rotarCodigo, expulsarUsuario, getClaseUsuarios };

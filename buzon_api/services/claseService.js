@@ -48,4 +48,24 @@ async function expulsarUsuario(db, id_clase, id_user) {
     return new Promise((resolve, reject) => db.query('DELETE FROM ACCEDE WHERE id_user = ? AND id_clase = ?', [id_user, id_clase], (err, result) => err ? reject(err) : resolve(result)));
 }
 
-module.exports = { getClasesForUser, crearClase, unirClase, getClaseInfo, eliminarClaseAndMensajes, rotarCodigo, expulsarUsuario };
+async function getClaseUsuarios(db, id_clase) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT u.id_user, u.correo_cifrado, 
+                   CASE 
+                       WHEN p.id_user IS NOT NULL THEN 'profesor'
+                       WHEN a.id_user IS NOT NULL THEN 'alumno'
+                       ELSE 'desconocido'
+                   END as rol,
+                   COALESCE(p.nombre, 'Alumno') as nombre
+            FROM ACCEDE ac
+            JOIN USUARIO u ON ac.id_user = u.id_user
+            LEFT JOIN PROFESOR p ON u.id_user = p.id_user
+            LEFT JOIN ALUMNO a ON u.id_user = a.id_user
+            WHERE ac.id_clase = ?
+        `;
+        db.query(sql, [id_clase], (err, results) => err ? reject(err) : resolve(results));
+    });
+}
+
+module.exports = { getClasesForUser, crearClase, unirClase, getClaseInfo, eliminarClaseAndMensajes, rotarCodigo, expulsarUsuario, getClaseUsuarios };

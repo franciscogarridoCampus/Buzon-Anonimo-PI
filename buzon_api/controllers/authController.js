@@ -1,19 +1,5 @@
 const { login, registro, cambiarPassword } = require('../services/authService');
-const crypto = require('crypto');
-
-const SECRET_KEY = "mi_clave_secreta";
-
-function base64UrlEncode(data) {
-    return Buffer.from(JSON.stringify(data)).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function generarJWT(payload) {
-    const header = { alg: "HS256", typ: "JWT" };
-    const encodedHeader = base64UrlEncode(header);
-    const encodedPayload = base64UrlEncode(payload);
-    const signature = crypto.createHmac('sha256', SECRET_KEY).update(`${encodedHeader}.${encodedPayload}`).digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    return `${encodedHeader}.${encodedPayload}.${signature}`;
-}
+const { generarJWT } = require('../services/utilsService');
 
 async function handleLogin(req, res) {
     const { correo, pass } = req.body;

@@ -10,5 +10,6 @@ router.get('/clase/:idClase', (req, res) => claseController.getClaseInfo(req, re
 router.delete('/clase/:id_clase', (req, res) => claseController.eliminarClase(req, res));
 router.put('/clase/codigo/:id_clase', (req, res) => claseController.rotarCodigo(req, res));
 router.delete('/clase/:id_clase/usuario/:id_user', (req, res) => claseController.expulsarUsuario(req, res));
+router.get('/clase-usuarios/:id_clase', (req, res) => claseController.getClaseUsuarios(req, res));
 
 module.exports = router;
