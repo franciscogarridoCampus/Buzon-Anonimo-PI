@@ -32,8 +32,7 @@ if (EMAIL_USER && EMAIL_PASS) {
 async function enviarMensaje(db, id_autor, id_clase, texto) {
     return new Promise((resolve, reject) => {
         // Validar contenido: palabras prohibidas
-        const textoMinus = texto.toLowerCase();
-        const contieneMala = badwords.some(palabra => textoMinus.includes(palabra.toLowerCase()));
+        const contieneMala = badwords.check(texto);
         if (contieneMala) return resolve({ success: false, msg: 'El mensaje contiene palabras no permitidas' });
 
         const fecha = new Date().toISOString().slice(0, 10);
