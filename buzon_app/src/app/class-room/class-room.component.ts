@@ -193,6 +193,22 @@ export class ClassRoomComponent implements OnInit, OnDestroy {
     this.temporizador = setInterval(actualizar, 1000);
   }
 
+// Copia el código temporal al portapapeles
+copiarCodigo() {
+  if (!this.codigoClase) return;
+
+  navigator.clipboard.writeText(this.codigoClase).then(
+    () => {
+      // Opcional: puedes mostrar un aviso temporal de éxito
+      console.log('Código copiado al portapapeles');
+    },
+    (err) => {
+      console.error('Error al copiar el código: ', err);
+    }
+  );
+}
+
+
   // Carga los mensajes de la clase
   cargarMensajes() {
     this.mensajeService.fetchMensajes(this.idClase).subscribe(msgs => {
