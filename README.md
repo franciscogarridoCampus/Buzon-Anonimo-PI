@@ -135,4 +135,4 @@ Si vas a modificar la API o la estructura, sigue estos pasos mínimos:
 
 ## 9) Licencia y otros
 
-Incluye aquí la licencia si procede. Por defecto no se incluye ninguna en este repo.
+Por defecto no se incluye ninguna en este repo.
