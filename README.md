@@ -78,6 +78,35 @@ npx ng serve
 
 Si usas Docker o despliegue remoto, adapta los pasos anteriores a tu entorno.
 
+Backend (buzon_api), Envío de Avisos
+
+Para que los profesores reciban un aviso cuando un alumno envía un mensaje a la clase, hay que configurar el correo en mensajeService.js:
+
+1.Abre el archivo buzon_api/services/mensajeService.js.
+
+2.Localiza estas variables:
+
+```powershell
+const EMAIL_USER = ''; // correo que enviará los avisos
+const EMAIL_PASS = ''; // contraseña de la app para el correo
+```
+Aviso: Es necesario tener un correo con verificación en dos pasos para que funcione este servicio.
+Puedes dejar las variables vacías si no quieres que se envíen avisos.
+3.Rellena ambos apartados para que el servicio funcione correctamente.
+·Cuando generes la contraseña de aplicación (app password) de 16 caracteres, suele aparecer con un espacio cada 4     letras/caracteres.
+·Debes unirlos sin espacios antes de ponerlo en EMAIL_PASS.
+
+```powershell
+#// Si el app password sale así: hrfa jasr alzm kazm
+#// En EMAIL_PASS debe ir así:
+const EMAIL_PASS = 'hrfajasralzmkazm'; // contraseña de la app para el correo
+```
+Con esto, cada vez que un alumno envíe un mensaje a una clase, los profesores recibirán un aviso con:
+
+·Nombre de la clase
+
+·Contenido del mensaje
+
 ## 5) Endpoints principales (usados por el frontend)
 
 - POST /api/login — body: { correo, pass }
