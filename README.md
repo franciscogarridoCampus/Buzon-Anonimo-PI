@@ -1,153 +1,167 @@
-BUZÓN ANÓNIMO
+# BUZÓN ANÓNIMO
 
-Aplicación web que permite la interacción anónima entre alumnos, profesores y moderadores en clases virtuales.
+Aplicación web para compartir mensajes anónimos entre alumnos, profesores y moderadores dentro de clases.
 
-El proyecto está dividido en dos partes principales:
+Este repositorio contiene dos subproyectos:
 
-Frontend: buzon_app (Angular)
+- `buzon_app` — Frontend Angular (SPA)
+- `buzon_api` — Backend Node.js + Express + MySQL (API REST)
 
-Backend: buzon_api (Node.js + Express + MySQL)
+## Contenido de este README
 
+- Visión general y arquitectura
+- Requisitos previos
+- Configuración de la base de datos
+- Cómo ejecutar (backend y frontend)
+- Endpoints principales (para desarrollo)
+- Notas de arquitectura (MVC reducido)
+- Troubleshooting y consejos
 
- *Arquitectura del Proyecto
+## 1) Visión general y arquitectura
 
-La aplicación sigue una arquitectura cliente-servidor, separada en dos módulos independientes.
+La aplicación usa una arquitectura cliente‑servidor. El frontend consume la API REST expuesta por el backend.
 
- 1. Frontend – buzon_app (Angular)
+Backend: se sigue una estructura MVC reducida (separación en `routes`, `controllers`, `services` y `models`). Esto facilita mantenimiento y pruebas.
 
-Es una Single Page Application (SPA) donde el usuario interactúa con la plataforma.
+Frontend: Angular con servicios HTTP en `src/app/services` que llaman exactamente a los endpoints listados más abajo.
 
- Responsabilidades:
+## 2) Requisitos previos
 
-   Interfaz gráfica para alumnos, profesores y moderadores.
+- Node.js 18+ (se usó Node 22 en desarrollo)
+- npm
+- MySQL (local o remoto). Se puede importar `buzon_anonimo.sql` para crear esquema y datos de ejemplo.
+- (Opcional) Angular CLI para desarrollo del frontend
 
-   Gestión de formularios (login, mensajes, clases).
+## 3) Configuración de la base de datos
 
-   Comunicación con el backend mediante servicios Angular (HTTPClient).
+1. Crear la base de datos `buzon_anonimo` e importar el fichero SQL:
 
-   Enrutamiento interno con control de acceso según rol.
+  - Usando cliente MySQL:
 
- Estructura lógica típica:
+```powershell
+mysql -u root -p
+CREATE DATABASE buzon_anonimo;
+USE buzon_anonimo;
+source buzon_anonimo.sql;
+```
 
-  components/ → Pantallas y elementos visuales
+  - O bien con phpMyAdmin: importar `buzon_anonimo.sql` en la base `buzon_anonimo`.
 
-  services/ → Comunicación con la API
+2. Ajusta credenciales en `buzon_api/server.js` si tu instalación MySQL no usa `root` sin contraseña.
 
-  models/ → Interfaces TS para tipado
+3. Variables sensibles (correo, contraseñas de servicios) no deben guardarse en el repo. Actualmente el backend usa valores de ejemplo para notificaciones; para producción configura variables de entorno o un archivo `.env` y modifica la carga en `server.js`.
 
-  guards/ → Protección de rutas por rol
+## 4) Cómo ejecutar
 
-2. Backend – buzon_api (Node.js + Express)
+Recomendación: abrir dos terminales (uno para backend y otro para frontend).
 
-Exposición de una API REST que gestiona la lógica del sistema.
+Backend (buzon_api):
 
- Responsabilidades:
+```powershell
+cd c:\ruta\a\Buzon-Anonimo-PI\buzon_api
+npm install
+node server.js
+# o, si prefieres npm start, añade en package.json: "start": "node server.js" y usa
+npm start
+```
 
- Validación de usuarios y roles.
+El servidor por defecto escucha en `http://localhost:3000`.
 
-   CRUD de clases.
+Frontend (buzon_app):
 
-   Gestión de códigos temporales.
+```powershell
+cd c:\ruta\a\Buzon-Anonimo-PI\buzon_app
+npm install
+npx ng serve
+# accesible en http://localhost:4200
+```
 
-   Registro y consulta de mensajes.
+Si usas Docker o despliegue remoto, adapta los pasos anteriores a tu entorno.
 
-   Conexión con la base de datos MySQL.
+Backend (buzon_api), Envío de Avisos
 
- Estructura típica:
+Para que los profesores reciban un aviso cuando un alumno envía un mensaje a la clase, hay que configurar el correo en mensajeService.js:
 
-  server.js → Punto de entrada
+1.Abre el archivo buzon_api/services/mensajeService.js.
 
-  routes/ → Endpoints del sistema
+2.Localiza estas variables:
 
-  controllers/ → Lógica de negocio
+```powershell
+const EMAIL_USER = ''; // correo que enviará los avisos
+const EMAIL_PASS = ''; // contraseña de la app para el correo
+```
+Aviso: Es necesario tener un correo con verificación en dos pasos para que funcione este servicio.
+Puedes dejar las variables vacías si no quieres que se envíen avisos.
+3.Rellena ambos apartados para que el servicio funcione correctamente.
+·Cuando generes la contraseña de aplicación (app password) de 16 caracteres, suele aparecer con un espacio cada 4     letras/caracteres.
+·Debes unirlos sin espacios antes de ponerlo en EMAIL_PASS.
 
-  models/ → Consultas a MySQL
+```powershell
+#// Si el app password sale así: hrfa jasr alzm kazm
+#// En EMAIL_PASS debe ir así:
+const EMAIL_PASS = 'hrfajasralzmkazm'; // contraseña de la app para el correo
+```
+Con esto, cada vez que un alumno envíe un mensaje a una clase, los profesores recibirán un aviso con:
 
-  middlewares/ → Autorización y permisos
+·Nombre de la clase
 
-3. Comunicación Frontend ↔ Backend
+·Contenido del mensaje
 
-  Toda la comunicación se hace mediante:
+## 5) Endpoints principales (usados por el frontend)
 
-   HTTP REST
+- POST /api/login — body: { correo, pass }
+- POST /api/registro — body: { correo, pass, rol, nombre }
+- PUT /api/usuario/password — body: { id_user, nuevaPass }
+- GET /api/clases/:id/:rol — obtener clases del usuario
+- POST /api/crear-clase — body: { nombre, id_creador }
+- POST /api/unirse-clase — body: { id_user, codigo }
+- GET /api/mensajes/:idClase — obtener mensajes de una clase
+- POST /api/mensaje — body: { id_clase, id_autor, texto }
+- DELETE /api/mensaje/:id_mensaje — eliminar mensaje
+- GET /api/clase/:idClase — info básica de clase
+- DELETE /api/clase/:id_clase — borrar clase y mensajes
+- PUT /api/clase/codigo/:id_clase — rotar código temporal
+- GET /api/clase-usuarios/:id_clase — listar usuarios de la clase
+- DELETE /api/clase/:id_clase/usuario/:id_user — expulsar usuario
 
-   JSON como formato de intercambio
+> Nota: el frontend actual (`buzon_app/src/app/services`) llama a las rutas anteriores; si las cambias debes actualizar también los servicios del frontend.
 
-   Validación de roles en cada petición
+## 6) Notas de arquitectura (MVC reducido)
 
- Ejemplos de endpoints:
+Estructura que encontrarás en `buzon_api`:
 
-  POST /login
+- `server.js` — punto de entrada y montaje de routers
+- `routes/` — definición de rutas (p. ej. `routes/authRoutes.js`)
+- `controllers/` — manejo de peticiones y respuestas
+- `services/` — reglas de negocio y orquestación
+- `models/` — acceso directo a la base de datos (consultas)
 
-  POST /clases
+Este refactor se hizo de forma incremental para mantener compatibilidad con el frontend. Si añades recursos nuevos, sigue esta separación.
 
-  GET /clases/:id/mensajes
+## 7) Troubleshooting rápido
 
-  POST /mensaje
+- Error `MODULE_NOT_FOUND` al arrancar: revisa que no falten archivos en `routes/`, `controllers/` o `services` y que no haya cambios de nombres.
+- Error de conexión a MySQL: verifica credenciales, host y que el servicio `mysqld` esté corriendo.
+- Errores FK al insertar: los IDs referenciados deben existir (crear usuarios/clases antes de insertar mensajes). No agregues datos de prueba en producción.
 
- Requisitos Previos
+Comandos útiles (PowerShell):
 
-   XAMPP (MySQL + phpMyAdmin)
+```powershell
+# comprobar puerto 3000
+netstat -ano | Select-String ":3000"
+# listar procesos node
+Get-Process -Name node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName
+```
 
-   Node.js 18+
+## 8) Contribuir
 
-   Angular CLI (opcional pero recomendado)
+Si vas a modificar la API o la estructura, sigue estos pasos mínimos:
 
+1. Crea una rama corta: `git checkout -b feat/mi-cambio`
+2. Añade tests o comprueba manualmente los endpoints involucrados.
+3. Haz commits claros (ej. `feat(api): mover mensajes a service/controller`).
+4. Abre PR describiendo los cambios y pruebas realizadas.
 
-*Configuración de la Base de Datos
+## 9) Licencia y otros
 
-  Iniciar Apache y MySQL en XAMPP
-
-  Entrar en: phpmyadmin
-
-  Crear la base de datos buzon_anonimo y importar buzon_anonimo.sql
-
-  Insertar usuarios de ejemplo:
-
-   INSERT INTO usuario (correo_cifrado, contrasena_cifrado)
-VALUES ('moderador@campuscamara.es', '1234');
-
-INSERT INTO moderador (id_user, nombre)
-VALUES (LAST_INSERT_ID(), 'Moderador Ejemplo');
-
-
-
-*Ejecución del Proyecto
-	Backend – buzon_api
-		cd buzon_api
-			npx npm install
-			node server.js
-			Cuando usamos node server.js en la terminal si lo convalida bien nos indicara que funciona correctamente y que para acceder usamos http://localhost:3000
-
-
-   Frontend – buzon_app
-   cd buzon_app
-      npx npm install
-      npx ng serve
-	  Cuando usamos npx ng serve en la terminal si lo convalida bien nos indicara que funciona correctamente y que para acceder usamos http://localhost:4200
-
-
-
-
-*Roles del Sistema
-Para acceder escribimos el correo y contraseña del usuario que queremos meternos y dependiendo de si es moderador,profesor y alumno cada uno tendra una funcion:
-
- Moderador
-
-Crear y eliminar clases
-
-Acceso total a todas las clases
-
-Generar códigos temporales (1 minuto)
-
- Profesor
-
-Puede leer todos los mensajes de la clase
-
-Puede generar códigos temporales
-
- Alumno
-
-Solo puede escribir mensajes anónimos
-
-Solo ve sus propios mensajes
+Por defecto no se incluye ninguna en este repo.

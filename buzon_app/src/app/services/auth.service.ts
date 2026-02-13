@@ -94,4 +94,9 @@ export class AuthService {
     const token = this.obtenerToken();
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
+
+  // CAMBIAR CONTRASEÑA
+cambiarPassword(id_user: number, nuevaPass: string): Observable<any> {
+  return this.http.put(`${this.baseUrl}/usuario/password`, { id_user, nuevaPass });
+}
 }
